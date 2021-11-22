@@ -77,27 +77,37 @@ class MLP:
         clean_net : boolean
             If True restore the net, if False keep the pretrained net (if exist)
         """
+        # Check if all the input are numpy arrays
         input_data = np.array(input_data)
         labels = np.array(labels)
         val_data = np.array(val_data)
         val_labels = np.array(val_labels)
+
+        # Reset the net if clean_net == True
         if clean_net:
             self.network = []
             self.error = []
             self.val_error = []
+            self.epoch = 0
+
+        # If the net is just an empty list fill it with the layers
         if len(self.network) == 0:
             self.create_net(input_data)
+
+        # Start train the net
         total_time = 0
         real_start = time.time()
+        print(f'Starting training {self.epoch} epoch', end = '\r')
         for i in range(epoch):
             start_loop = time.time()
-            print(f'Epoch {self.epoch}', end = '\r')
-            # Train dataset
+
+            # Train dataset #
             self.network[0].input = input_data
             self.feedforward()
             self.learning_step(labels)
             self.error.append(error(labels,self.network[-1].out)/len(labels))
-            # Validation dataset
+
+            # Validation dataset #
             self.network[0].input = val_data
             self.feedforward()
             self.val_error.append(error(val_labels,self.network[-1].out)/len(val_labels))
@@ -113,12 +123,13 @@ class MLP:
             mean_for_loop = total_time/(i+1)
             remain_time = mean_for_loop*(epoch-i)
             string_time = f' --- [countdown : {remain_time:.1f} s]'
-            end = '\r'
-            if i == epoch - 1:
-                string_time = ' '*20
-                end = '\n'
-            print(f'Epoch {self.epoch}:' + string_err + string_time + ' '*10, end = end)
+            print(f'Epoch {self.epoch}:' + string_err + string_time + ' '*10, end = '\r')
+
+            # Updating epoch
             self.epoch += 1
+
+        # Final print
+        print(f'Epoch {self.epoch}:' + string_err + ' '*30, end = '\n')
         print(f'Elapsed time: {time.time()-real_start} s')
 
     def predict(self, data):
