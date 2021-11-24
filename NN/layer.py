@@ -3,8 +3,6 @@ Module implementing the layer structure.
 """
 
 import numpy as np
-import time
-import matplotlib.pyplot as plt
 from scipy.special import expit #sigmoide
 
 #%%% ACTIVATION FUCNTIONS %%%
@@ -22,11 +20,11 @@ net = lambda data_matrix, array_weight : data_matrix.dot( array_weight.T )
 error = lambda label, out : np.sum( ( label - out )**2 )
 
 activation_function = {"linear" : lin,
-                       "sigmoid": sigmoid,
-                       "relu"   : relu}
+                        "sigmoid": sigmoid,
+                        "relu"   : relu}
 derivative = {"linear" : lin_der,
-              "sigmoid": sigmoid_derivative,
-              "relu"   : relu_der}
+                "sigmoid": sigmoid_derivative,
+                "relu"   : relu_der}
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 class Layer:
@@ -76,7 +74,7 @@ class Layer:
         # - j is the number of input weights of each unit in the Layer
         # - s is the the number of unit in the layer (unit_number).
         self.weight=np.random.uniform(-starting_points,starting_points,
-                                      size=(unit_number, num_features ) )
+                                        size=(unit_number, num_features ) )
         # Array of bias for each unit in the Layer
         self.bias=np.random.uniform(- starting_points, starting_points,
                                     size = unit_number )
