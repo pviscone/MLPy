@@ -28,6 +28,7 @@ TODO: In ordine
 
 - Implementare criteri di stopping
 
+- Implementare Grid Search per scelta del modello
 
 
 ROBE aggiuntive da fare solo se si rendono visibilmente necessarie:
