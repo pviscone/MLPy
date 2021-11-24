@@ -35,3 +35,4 @@ ROBE aggiuntive da fare solo se si rendono visibilmente necessarie:
 - Cascade correlation
 - Vari tipi di K fold cross validation
 - Algortimi alternativi alla backpropagation: quickprop, RProp,...
+- Dropout
