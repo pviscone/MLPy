@@ -3,7 +3,7 @@ Implementation of the Multi Layer Perceptron.
 """
 import time
 import numpy as np
-from layer import Layer, error
+from layer import Layer, error , Preprocess
 
 class MLP:
     """
@@ -148,7 +148,7 @@ class MLP:
             Array with the data in input to the MLP.
         """
         for layer,num_unit in enumerate(self.structure):
-            if layer==0:
+            if layer==0: #If empty, initializing the neural network
                 self.network.append(Layer(num_unit,input_data,func=self.func[layer],
                                           starting_points=self.starting_points[layer]))
             else:

@@ -65,14 +65,17 @@ class Layer:
         self.input=np.array(input_matrix) # Storing the input matrix
         self.unit_number=unit_number      # Storing the number of units
         num_features = np.shape(self.input)[1] # Number of input features
-        # The weight matrix has the structure:
-        #
-        # [[weight_1, ... ,weight_j]       (unit_1)
-        #  [          ...          ]         ...
-        #  [weight_1, ... ,weight_j]]      (unit_s)
-        #
-        # - j is the number of input weights of each unit in the Layer
-        # - s is the the number of unit in the layer (unit_number).
+        '''
+        The weight matrix has the structure:
+        
+        [[weight_1, ... ,weight_j]       (unit_1)
+        [          ...          ]         ...
+        [weight_1, ... ,weight_j]]      (unit_s)
+        
+        - j is the number of input weights of each unit in the Layer
+        - s is the the number of unit in the layer (unit_number).
+        '''
+        
         self.weight=np.random.uniform(-starting_points,starting_points,
                                         size=(unit_number, num_features ) )
         # Array of bias for each unit in the Layer
@@ -100,3 +103,46 @@ class Layer:
         """
         #scorrendo le colonne trovi i net di tutti i neuroni, scorrendo le righe cambi pattern
         return self.func(self.net)
+        
+        
+        
+def Preprocess(input_matrix, div = [80,10,10]):
+	""""
+	Splitting the data in three different set, one for training, one for vali
+	dation, one for test. Each pattern of each set is selected randomly from
+	the initial input_matrix. 
+	"""
+	dim = np.shape(input_matrix)
+	division = division #the proportion in splitting data, Default 80%,10%,10%
+	Train_lenght = int(div[0]*dim[0])
+	Val_lenght = int(div[1]*dim[0])
+	Test_lenght = dim[0]-Train_lenght-Val_lenght
+	def spitting(input_matrix):
+		order = np.linspace(0,dim[0],1)
+		np.random.shuffle(order) # shuffling the array of pattern, then create the sets
+		# training set
+		input_set = np.zeros((Train_lenght,dim[1]))
+		for i in range(0,Train_lenght):
+			input_set[i,:] = input_matrix[order[i],:]
+		# validation set
+		val_set = np.zeros((Val_lenght,dim[1]))
+		for i in range(1,Val_lenght):
+			val_set[i,:] = input_matrix[order[i+train_lenght],:]
+		# test set
+		test_set = np.zeros((Test_lenght,dim[1]))
+		for i in range(1,Test_lenght):
+			test_set[i,:]  = input_matrix[order[i+train_lenght+Val_lenght],:]
+		return input_set , val_test , test_set
+	input_set , val_test , test_set = splitting(input_matrix)
+	
+	return input_set , val_test , test_set
+	
+			
+		
+	
+		
+		
+	
+	
+	
+	
