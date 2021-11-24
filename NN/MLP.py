@@ -178,5 +178,5 @@ class MLP:
             dW=np.sum([np.outer(i,j) for i,j in zip(delta,layer.input)], axis=0) #batch
             db=np.sum(delta,axis=0)
 
-            layer.weight += self.eta*dW - self.norm_L * self.lamb * layer.weight**(self.norm_L-1 )
-            layer.bias   += self.eta*db - self.norm_L * self.lamb * layer.bias**( self.norm_L-1 )
+            layer.weight += self.eta*dW - self.lamb * (np.abs(layer.weight)**(self.norm_L-1))*np.sign(layer.weight)
+            layer.bias   += self.eta*db
