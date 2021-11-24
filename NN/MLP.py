@@ -10,7 +10,7 @@ class MLP:
     Multi Layer Perceptron class.
     """
     def __init__(self, structure, func, starting_points,
-                    eta=0.1, lamb=0, norm_L=2, alpha=0, nesterov=False):
+                        eta=0.1, lamb=0, norm_L=2, alpha=0, nesterov=False):
         """
         __init__ function of the class.
 

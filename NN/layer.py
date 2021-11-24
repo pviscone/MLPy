@@ -20,11 +20,11 @@ net = lambda data_matrix, array_weight : data_matrix.dot( array_weight.T )
 error = lambda label, out : np.sum( ( label - out )**2 )
 
 activation_function = {"linear" : lin,
-                        "sigmoid": sigmoid,
-                        "relu"   : relu}
+                       "sigmoid": sigmoid,
+                       "relu"   : relu}
 derivative = {"linear" : lin_der,
-                "sigmoid": sigmoid_derivative,
-                "relu"   : relu_der}
+              "sigmoid": sigmoid_derivative,
+              "relu"   : relu_der}
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 class Layer:
