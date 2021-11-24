@@ -13,6 +13,7 @@ TODO: In ordine
 						errore quadratico medio o altro)
 
 - Implementare funzioni di splitting del dataset esternamente alla classe MLP e Layer
+--- inserita funzione in layer.py
 
 - Funzione di Rescaling/Standardizzazione dei dati (media 0, varianza 1 oppure range [0,1])
 
