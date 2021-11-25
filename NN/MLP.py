@@ -3,7 +3,7 @@ Implementation of the Multi Layer Perceptron.
 """
 import time
 import numpy as np
-from layer import Layer, error , Preprocess
+from layer import Layer, error, split
 
 class MLP:
     """

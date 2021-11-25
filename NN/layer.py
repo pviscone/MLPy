@@ -3,6 +3,7 @@ Module implementing the layer structure.
 """
 
 import numpy as np
+from numpy.random.mtrand import shuffle
 from scipy.special import expit #sigmoide
 
 #%%% ACTIVATION FUCNTIONS %%%
@@ -103,46 +104,25 @@ class Layer:
         """
         #scorrendo le colonne trovi i net di tutti i neuroni, scorrendo le righe cambi pattern
         return self.func(self.net)
-        
-        
-        
-def Preprocess(input_matrix, div = [80,10,10]):
-	""""
-	Splitting the data in three different set, one for training, one for vali
+
+
+
+def split(input_matrix,frac_training=0.8,shuffle=False,kind="hold_out",k=4):
+    """[Splitting the data in three different set, one for training, one for vali
 	dation, one for test. Each pattern of each set is selected randomly from
-	the initial input_matrix. 
-	"""
-	dim = np.shape(input_matrix)
-	division = division #the proportion in splitting data, Default 80%,10%,10%
-	Train_lenght = int(div[0]*dim[0])
-	Val_lenght = int(div[1]*dim[0])
-	Test_lenght = dim[0]-Train_lenght-Val_lenght
-	def spitting(input_matrix):
-		order = np.linspace(0,dim[0],1)
-		np.random.shuffle(order) # shuffling the array of pattern, then create the sets
-		# training set
-		input_set = np.zeros((Train_lenght,dim[1]))
-		for i in range(0,Train_lenght):
-			input_set[i,:] = input_matrix[order[i],:]
-		# validation set
-		val_set = np.zeros((Val_lenght,dim[1]))
-		for i in range(1,Val_lenght):
-			val_set[i,:] = input_matrix[order[i+train_lenght],:]
-		# test set
-		test_set = np.zeros((Test_lenght,dim[1]))
-		for i in range(1,Test_lenght):
-			test_set[i,:]  = input_matrix[order[i+train_lenght+Val_lenght],:]
-		return input_set , val_test , test_set
-	input_set , val_test , test_set = splitting(input_matrix)
-	
-	return input_set , val_test , test_set
-	
-			
-		
-	
-		
-		
-	
-	
-	
-	
+	the initial input_matrix.]
+
+    Args:
+        input_matrix ([type]): [input matrix without test set]
+        frac_training (float, optional): [fraction of data to use in training]. Defaults to 0.8.
+        shuffle (bool, optional): [shuffle the input matrix]. Defaults to False.
+    """
+    if shuffle:
+        np.random.shuffle(input_matrix)
+    if kind=="hold_out":
+        idx=int(len(input_matrix)*frac_training)
+        training_set=input_matrix[0:idx,:]
+        validation_set=input_matrix[idx:,:]
+        return training_set, validation_set
+    elif kind=="k-fold":
+        pass
