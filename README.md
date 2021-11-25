@@ -17,6 +17,7 @@ Lista ordinata delle cose da fare
     - [ ] nesterov
 - [ ] Implementare funzione per creare diverse strategie di learning rate adattivo
 - [ ] Implementare criteri di stopping
+- [ ] Implementare diverse strategie di inizializzazione dei pesi
 - [ ] Implementare Grid Search per scelta del modello
 
 ### Robe aggiuntive
