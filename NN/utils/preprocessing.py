@@ -50,9 +50,9 @@ def split(input_matrix, frac_training=0.8, shuffle=False, kind="hold_out", k=4):
     elif kind=="k-fold":
         n_data = len(copy_data)
         fold_size = np.floor(len(copy_data)/k)
-        #upper_bound = lambda x: x if n_data-x > fold_size else n_data
         idxs = [(int(i*fold_size),
                  int((i+1)*fold_size))
                 for i in range(k-1)]
-        np.append(idxs, [(k-1)*fold_size,fold_size])
+        np.append(idxs, ((k-1)*fold_size, n_data)) 
+	
         return copy_data, idxs
