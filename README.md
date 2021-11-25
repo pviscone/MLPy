@@ -6,7 +6,7 @@ Lista ordinata delle cose da fare
 - [ ] Adattare le funzioni a come le vuole Micheli (es. vedi se come errore vuole errore quadratico, errore quadratico medio o altro)
 - [ ] Implementare funzioni di splitting del dataset esternamente alla classe MLP e Layer
     - [x] hold-out
-    - [ ] k fold
+    - [x] k fold
 - [ ] Funzione di Rescaling/Standardizzazione dei dati (media 0, varianza 1 oppure range [0,1])
 - [ ] Implementare funzione per salvare la rete (anche ad es. ogni N epoche (tramite flag booleana))
 - [ ] Implementare minibatch
