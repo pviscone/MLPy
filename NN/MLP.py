@@ -3,8 +3,9 @@ Implementation of the Multi Layer Perceptron.
 """
 import time
 import numpy as np
+#from numba import njit # <---- Decomment for a 5x speed up
 from utils.preprocessing import split
-from utils.losses import error
+from utils.losses import MEE_MSE
 from layer import Layer
 
 class MLP:
@@ -52,8 +53,10 @@ class MLP:
         self.alpha = alpha
         self.nesterov = nesterov
 
-        self.error = []
-        self.val_error = []
+        self.train_MEE = []
+        self.train_MSE = []
+        self.val_MEE = []
+        self.val_MSE = []
         self.epoch = 0
 
 
@@ -88,9 +91,10 @@ class MLP:
 
         # Reset the net if clean_net == True
         if clean_net:
-            self.network = []
-            self.error = []
-            self.val_error = []
+            self.train_MEE = []
+            self.train_MSE = []
+            self.val_MEE = []
+            self.val_MSE = []
             self.epoch = 0
 
         # If the net is just an empty list fill it with the layers
@@ -108,16 +112,18 @@ class MLP:
             self.network[0].input = input_data
             self.feedforward()
             self.learning_step(labels)
-            self.error.append(error(labels,self.network[-1].out)/len(labels))
+            MEE, MSE = MEE_MSE(labels,self.network[-1].out)
+            self.train_MEE.append(MEE)
+            self.train_MSE.append(MSE)
 
             # Validation dataset #
-            self.network[0].input = val_data
-            self.feedforward()
-            self.val_error.append(error(val_labels,self.network[-1].out)/len(val_labels))
+            MEE, MSE = MEE_MSE(val_labels, self.predict(val_data))
+            self.val_MEE.append(MEE)
+            self.val_MSE.append(MSE)
 
             # Printing the error
-            string_val_err = f' --- [val error = {self.val_error[self.epoch]:.4f}]'
-            string_err = f' --- [train error = {self.error[self.epoch]:.4f}]'
+            string_val_err = f' --- [val MEE = {self.val_MEE[self.epoch]:.4f}]'
+            string_err = f' --- [train MEE = {self.train_MEE[self.epoch]:.4f}]'
             string_err += string_val_err
 
             # Printing remaining time
@@ -136,7 +142,19 @@ class MLP:
         print(f'Elapsed time: {time.time()-real_start} s')
 
     def predict(self, data):
-        """ Predict out for new data """
+        """
+        Predict out for new data
+
+        Parameters
+        ----------
+        data : list or numpy 2d array
+            Array with the data in input to the MLP.
+
+        Returns
+        -------
+        numpy 1d array or numpy 2d array
+            Array with the output labels predicted by the model.
+        """
         self.network[0].input = data
         self.feedforward()
         return self.network[-1].out
@@ -178,8 +196,27 @@ class MLP:
             else:
                 delta=(np.matmul(delta,weight_1)*layer.der_func(layer.net))
             weight_1=layer.weight
+
+#xxxxxxxxxxx Comment here for  5x speed up xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
             dW=np.sum([np.outer(i,j) for i,j in zip(delta,layer.input)], axis=0) #batch
             db=np.sum(delta,axis=0)
+#xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+
+#%%%%%%%%%%% Decomment here for 5x speed up %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+#            dW, db = self._jit_update_weight(delta, layer.input)
+#%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
             layer.weight += self.eta*dW - self.lamb * (np.abs(layer.weight)**(self.norm_L-1))*np.sign(layer.weight)
             layer.bias   += self.eta*db
+
+#%%%% Decomment the block for a 5x speed up %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+#    @staticmethod
+#    @njit(cache = True, fastmath = True)
+#    def _jit_update_weight(delta, inputs):
+#        list_prod = np.empty( (*delta.shape, inputs.shape[1]) )
+#        for i in range(len(delta)): # speed up this loop on data with numba!
+#            list_prod[i] = np.outer(delta[i], inputs[i])
+#        dW = np.sum(list_prod, axis = 0)
+#        db = np.sum(delta, axis = 0)
+#        return dW, db
+#%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
