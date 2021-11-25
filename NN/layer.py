@@ -4,29 +4,7 @@ Module implementing the layer structure.
 
 import numpy as np
 from numpy.random.mtrand import shuffle
-from scipy.special import expit #sigmoide
-
-#%%% ACTIVATION FUCNTIONS %%%
-# Sigmoid function
-sigmoid = lambda x, a : expit(a * x)
-sigmoid_derivative = lambda x, a : a * expit(a * x) * (1 - expit( a * x ))
-# Linear function
-lin = lambda x, a : a * x
-lin_der = lambda x, a : a
-# Relu
-relu = lambda x, a : a * np.maximum(0, x)
-relu_der = lambda x, a : a * np.heaviside(x, 1)
-
-net = lambda data_matrix, array_weight : data_matrix.dot( array_weight.T )
-error = lambda label, out : np.sum( ( label - out )**2 )
-
-activation_function = {"linear" : lin,
-                       "sigmoid": sigmoid,
-                       "relu"   : relu}
-derivative = {"linear" : lin_der,
-              "sigmoid": sigmoid_derivative,
-              "relu"   : relu_der}
-#%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+from utils.activations import actv_funcs, dactv_funcs
 
 class Layer:
     """
@@ -68,15 +46,15 @@ class Layer:
         num_features = np.shape(self.input)[1] # Number of input features
         '''
         The weight matrix has the structure:
-        
+
         [[weight_1, ... ,weight_j]       (unit_1)
         [          ...          ]         ...
         [weight_1, ... ,weight_j]]      (unit_s)
-        
+
         - j is the number of input weights of each unit in the Layer
         - s is the the number of unit in the layer (unit_number).
         '''
-        
+
         self.weight=np.random.uniform(-starting_points,starting_points,
                                         size=(unit_number, num_features ) )
         # Array of bias for each unit in the Layer
@@ -85,8 +63,8 @@ class Layer:
 
         #Storing the activation function and his derivative
         self.function, self.slope=func
-        self.func=lambda x : activation_function[self.function](x,self.slope)
-        self.der_func=lambda x : derivative[self.function](x,self.slope)
+        self.func=lambda x : actv_funcs(self.function)(x,self.slope)
+        self.der_func=lambda x : dactv_funcs(self.function)(x,self.slope)
 
     @property
     def net(self):
@@ -94,7 +72,7 @@ class Layer:
         This property evaluate the dot product between the inputs and the
         weight (adding the bias).
         """
-        return net(self.input,self.weight)+self.bias
+        return self.input.dot( self.weight.T ) + self.bias
 
     @property
     def out(self):
@@ -104,25 +82,3 @@ class Layer:
         """
         #scorrendo le colonne trovi i net di tutti i neuroni, scorrendo le righe cambi pattern
         return self.func(self.net)
-
-
-
-def split(input_matrix,frac_training=0.8,shuffle=False,kind="hold_out",k=4):
-    """[Splitting the data in three different set, one for training, one for vali
-	dation, one for test. Each pattern of each set is selected randomly from
-	the initial input_matrix.]
-
-    Args:
-        input_matrix ([type]): [input matrix without test set]
-        frac_training (float, optional): [fraction of data to use in training]. Defaults to 0.8.
-        shuffle (bool, optional): [shuffle the input matrix]. Defaults to False.
-    """
-    if shuffle:
-        np.random.shuffle(input_matrix)
-    if kind=="hold_out":
-        idx=int(len(input_matrix)*frac_training)
-        training_set=input_matrix[0:idx,:]
-        validation_set=input_matrix[idx:,:]
-        return training_set, validation_set
-    elif kind=="k-fold":
-        pass

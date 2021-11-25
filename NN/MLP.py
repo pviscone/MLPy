@@ -3,7 +3,9 @@ Implementation of the Multi Layer Perceptron.
 """
 import time
 import numpy as np
-from layer import Layer, error, split
+from utils.preprocessing import split
+from utils.losses import error
+from layer import Layer
 
 class MLP:
     """
@@ -41,7 +43,8 @@ class MLP:
         """
         self.structure=structure #numero di unità per ogni layer
         self.network=[]
-        self.func=func #lista di tuple con (funzione, slope)
+        # list of tuple with (function, parameter of funtcion)
+        self.func=[f if isinstance(f, (tuple, list)) else (f, 1) for f in func]
         self.starting_points=starting_points #lista degli start_point
         self.eta = eta
         self.lamb = lamb
