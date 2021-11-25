@@ -31,7 +31,7 @@ def split(input_matrix, frac_training=0.8, shuffle=False, kind="hold_out", k=4):
         If k-fold return (data matrix, list of tuple containing 2 indexs).
         The index in the list represent the (idx1 = start, idx2 = stop) index
         to split for each fold. In order to not waste memory you can separate
-        with this 2 index each train-val dataset berore training the model.
+        with this 2 index each train-val dataset before training the model.
         Note:
             to extract validation set just use the slicing: data[idx1, idx2]
             to extract train set just use
@@ -50,8 +50,9 @@ def split(input_matrix, frac_training=0.8, shuffle=False, kind="hold_out", k=4):
     elif kind=="k-fold":
         n_data = len(copy_data)
         fold_size = np.floor(len(copy_data)/k)
-        upper_bound = lambda x: x if n_data-x > fold_size else n_data
+        #upper_bound = lambda x: x if n_data-x > fold_size else n_data
         idxs = [(int(i*fold_size),
-                 int(upper_bound((i+1)*fold_size)))
-                for i in range(k)]
+                 int((i+1)*fold_size))
+                for i in range(k-1)]
+        np.append(idxs, [(k-1)*fold_size,fold_size])
         return copy_data, idxs
