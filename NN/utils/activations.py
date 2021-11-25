@@ -1,3 +1,7 @@
+"""
+Activation functions for the layers of the MLP.
+"""
+
 import numpy as np
 from scipy.special import expit #sigmoide
 
