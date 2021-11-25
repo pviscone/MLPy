@@ -122,8 +122,8 @@ class MLP:
             self.val_MSE.append(MSE)
 
             # Printing the error
-            string_val_err = f' --- [val MEE = {self.val_MEE[self.epoch]:.4f}]'
-            string_err = f' --- [train MEE = {self.train_MEE[self.epoch]:.4f}]'
+            string_val_err = f'  [val MEE = {self.val_MEE[self.epoch]:.4f}]'
+            string_err = f'  [train MEE = {self.train_MEE[self.epoch]:.4f}]'
             string_err += string_val_err
 
             # Printing remaining time
@@ -131,8 +131,8 @@ class MLP:
             total_time += elapsed_for_this_loop
             mean_for_loop = total_time/(i+1)
             remain_time = mean_for_loop*(epoch-i)
-            string_time = f' --- [countdown : {remain_time:.1f} s]'
-            print(f'Epoch {self.epoch}:' + string_err + string_time + ' '*10, end = '\r')
+            string_time = f'  [wait {remain_time:.1f} s]'
+            print(f'[Epoch {self.epoch}]' + string_err + string_time + ' '*10, end = '\r', flush = True)
 
             # Updating epoch
             self.epoch += 1
