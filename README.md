@@ -3,7 +3,9 @@
 ## TODO
 Lista ordinata delle cose da fare
 - [ ] Trovare metodo più furbo per fare validazione l'attributo di input viene cambiato due volte a ogni step di apprendimento
-- [ ] Adattare le funzioni a come le vuole Micheli (es. vedi se come errore vuole errore quadratico, errore quadratico medio o altro)
+- [x] Adattare le funzioni a come le vuole Micheli (es. vedi se come errore vuole errore quadratico, errore quadratico medio o altro)
+    - [x] MEE
+    - [x] MSE
 - [ ] Implementare funzioni di splitting del dataset esternamente alla classe MLP e Layer
     - [x] hold-out
     - [x] k fold
