@@ -2,14 +2,14 @@
 
 ## TODO
 Lista ordinata delle cose da fare
-- [ ] Trovare metodo più furbo per fare validazione l'attributo di input viene cambiato due volte a ogni step di apprendimento
+- [x] Trovare metodo più furbo per fare validazione l'attributo di input viene cambiato due volte a ogni step di apprendimento
 - [x] Adattare le funzioni a come le vuole Micheli (es. vedi se come errore vuole errore quadratico, errore quadratico medio o altro)
     - [x] MEE
     - [x] MSE
 - [ ] Implementare funzioni di splitting del dataset esternamente alla classe MLP e Layer
     - [x] hold-out
-    - [x] k fold
-- [ ] Funzione di Rescaling/Standardizzazione dei dati (media 0, varianza 1 oppure range [0,1])
+    - [ ] k fold
+- [x] Funzione di Rescaling/Standardizzazione dei dati (media 0, varianza 1 oppure range [0,1])
 - [ ] Implementare funzione per salvare la rete (anche ad es. ogni N epoche (tramite flag booleana))
 - [ ] Implementare minibatch
 - [ ] Implementare momento
