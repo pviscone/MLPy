@@ -4,7 +4,7 @@ Function for the dataset splitting.
 
 import numpy as np
 
-def split(input_matrix, frac_training=0.8, shuffle=False, kind="hold_out", k=4):
+def split(input_matrix, frac_training=0.8, kind="hold_out", k=4):
     """
     Splitting the data in three different set, one for training, one for
     validation, one for test. Each pattern of each set is selected randomly from
@@ -16,8 +16,6 @@ def split(input_matrix, frac_training=0.8, shuffle=False, kind="hold_out", k=4):
         Input data matrix (containing also the labels) without the test set.
     frac_training : float
         Fraction of data to use in training, default is 0.8 .
-    shuffle : bool
-        If True shuffle the input matrix, default is False.
     kind : string
         Kind of splitting, default is 'hold_out'.
     k : int
@@ -39,23 +37,52 @@ def split(input_matrix, frac_training=0.8, shuffle=False, kind="hold_out", k=4):
 
     """
     copy_data = np.copy(input_matrix) # Copy the dataset to not change original
-                                      # input_matrix
-    if shuffle:
-        np.random.shuffle(copy_data)
+#                                     # input_matrix
     if kind=="hold_out":
         idx=round(len(copy_data)*frac_training)
         training_set=copy_data[0:idx,:]
         validation_set=copy_data[idx:,:]
-        return training_set, validation_set
     elif kind=="k-fold":
-        n_data = len(copy_data)
-        fold_size = np.floor(len(copy_data)/k)
-        idxs = [(int(i*fold_size),
-                 int((i+1)*fold_size))
-                for i in range(k-1)]
-        np.append(idxs, ((k-1)*fold_size, n_data))
+        training_set, validation_set=k_fold(input_matrix,k)
+    return training_set, validation_set
 
-        return copy_data, idxs
+
+def function_counter(function):
+    counter=-1
+    def wrapper(*args,**kwargs):
+        wrapper.counter+=1
+        return function(*args,**kwargs)
+    wrapper.counter=counter
+    return wrapper
+
+@function_counter
+def k_fold(input_matrix, k=4):
+    """[Create a partition of the dataset in k-fold cross validation set and return the training set and the validation set for each fold recursively]
+
+    Args:
+        input_matrix ([type]): [description]
+        k (int, optional): [description]. Defaults to 4.
+
+    Returns:
+        [numpy array], [numpy array]: [training set, validation set]
+    """
+    idx_partition=int(len(input_matrix)/k)
+    k_partition=k_fold.counter%k
+    if k_partition<(k-1):
+        training_set=np.delete(input_matrix, slice(k_partition*idx_partition,(k_partition+1)*idx_partition), axis=0)
+        validation_set=input_matrix[k_partition*idx_partition:(k_partition+1)*idx_partition,:]
+    if k_partition==(k-1):
+        training_set=np.delete(input_matrix, slice(k_partition*idx_partition,len(input_matrix)), axis=0)
+        validation_set=input_matrix[k_partition*idx_partition:len(input_matrix),:]
+    return training_set, validation_set
+
+
+
+
+
+
+
+
 
 class Normalize:
     def normalize(self,input_matrix):
@@ -70,3 +97,4 @@ class Normalize:
         return (input_matrix-self.min)/(self.max-self.min)
     def deminmax(self,input_matrix):
         return input_matrix*(self.max-self.min)+self.min
+
