@@ -53,6 +53,20 @@ def split(input_matrix, frac_training=0.8, shuffle=False, kind="hold_out", k=4):
         idxs = [(int(i*fold_size),
                  int((i+1)*fold_size))
                 for i in range(k-1)]
-        np.append(idxs, ((k-1)*fold_size, n_data)) 
-	
+        np.append(idxs, ((k-1)*fold_size, n_data))
+
         return copy_data, idxs
+
+class Normalize:
+    def normalize(self,input_matrix):
+        self.mean=np.mean(input_matrix,axis=0)
+        self.std=np.std(input_matrix,axis=0)
+        return (input_matrix-self.mean)/self.std
+    def denormalize(self,input_matrix):
+        return input_matrix*self.std+self.mean
+    def minmax(self,input_matrix):
+        self.max=np.max(input_matrix,axis=0)
+        self.min=np.min(input_matrix,axis=0)
+        return (input_matrix-self.min)/(self.max-self.min)
+    def deminmax(self,input_matrix):
+        return input_matrix*(self.max-self.min)+self.min
