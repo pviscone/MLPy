@@ -3,7 +3,6 @@ Module implementing the layer structure.
 """
 
 import numpy as np
-from numpy.random.mtrand import shuffle
 from utils.activations import actv_funcs, dactv_funcs
 
 class Layer:

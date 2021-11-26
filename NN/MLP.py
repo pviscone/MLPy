@@ -4,7 +4,6 @@ Implementation of the Multi Layer Perceptron.
 import time
 import numpy as np
 #from numba import njit # <---- Decomment for a 5x speed up
-from utils.preprocessing import split
 from utils.losses import MEE_MSE
 from layer import Layer
 
@@ -58,7 +57,6 @@ class MLP:
         self.val_MEE = []
         self.val_MSE = []
         self.epoch = 0
-
 
 
     def __getattr__(self,attr):
