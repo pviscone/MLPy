@@ -97,7 +97,7 @@ class MLP:
 
         # If the net is just an empty list fill it with the layers
         if len(self.network) == 0:
-            self.create_net(input_data)
+            self.create_net(input_data,val_data)
 
         # Start train the net
         total_time = 0
@@ -107,7 +107,6 @@ class MLP:
             start_loop = time.time()
 
             # Train dataset #
-            self.network[0].input = input_data
             self.feedforward()
             self.learning_step(labels)
             MEE, MSE = MEE_MSE(labels,self.network[-1].out)
@@ -115,7 +114,8 @@ class MLP:
             self.train_MSE.append(MSE)
 
             # Validation dataset #
-            MEE, MSE = MEE_MSE(val_labels, self.predict(val_data))
+            self.feedforward_validation()
+            MEE, MSE = MEE_MSE(val_labels, self.network[-1].out_val)
             self.val_MEE.append(MEE)
             self.val_MSE.append(MSE)
 
@@ -157,7 +157,7 @@ class MLP:
         self.feedforward()
         return self.network[-1].out
 
-    def create_net(self, input_data):
+    def create_net(self, input_data,val_data):
         """
         Feed the input of the net and propagate it
 
@@ -168,16 +168,21 @@ class MLP:
         """
         for layer,num_unit in enumerate(self.structure):
             if layer==0: #If empty, initializing the neural network
-                self.network.append(Layer(num_unit,input_data,func=self.func[layer],
+                self.network.append(Layer(num_unit,input_data,val_matrix=val_data,func=self.func[layer],
                                           starting_points=self.starting_points[layer]))
             else:
-                self.network.append(Layer(num_unit,self.network[layer-1].out, func=self.func[layer],
+                self.network.append(Layer(num_unit,self.network[layer-1].out, val_matrix=self.network[layer-1].out_val,func=self.func[layer],
                                           starting_points=self.starting_points[layer]))
 
     def feedforward(self):
         """ Move the input to the output of the net"""
         for lay_prev,lay_next in zip(self.network[:-1:],self.network[1::]):
             lay_next.input=lay_prev.out
+
+    def feedforward_validation(self):
+        """ Move the input to the output of the net"""
+        for lay_prev,lay_next in zip(self.network[:-1:],self.network[1::]):
+            lay_next.val_data=lay_prev.out_val
 
     def learning_step(self,labels):
         """

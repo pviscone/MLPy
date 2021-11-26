@@ -9,7 +9,7 @@ class Layer:
     """
     Layer of the Neural Network.
     """
-    def __init__(self, unit_number, input_matrix, func = ("sigmoid",1), starting_points = 0.1):
+    def __init__(self, unit_number, input_matrix,val_matrix=[], func = ("sigmoid",1), starting_points = 0.1):
         """
         __init__ of class Layer.
 
@@ -41,6 +41,7 @@ class Layer:
             [-starting_points, starting_points]
         """
         self.input=np.array(input_matrix) # Storing the input matrix
+        self.val_data=np.array(val_matrix)
         self.unit_number=unit_number      # Storing the number of units
         num_features = np.shape(self.input)[1] # Number of input features
         '''
@@ -81,3 +82,20 @@ class Layer:
         """
         #scorrendo le colonne trovi i net di tutti i neuroni, scorrendo le righe cambi pattern
         return self.func(self.net)
+
+    @property
+    def net_val(self):
+        """
+        This property evaluate the dot product between the inputs and the
+        weight (adding the bias).
+        """
+        return self.val_data.dot( self.weight.T ) + self.bias
+
+    @property
+    def out_val(self):
+        """
+        This property return the output values of the net using the activation
+        function.
+        """
+        #scorrendo le colonne trovi i net di tutti i neuroni, scorrendo le righe cambi pattern
+        return self.func(self.net_val)
