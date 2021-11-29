@@ -41,6 +41,12 @@ class Layer:
         starting_points : float
             The weight of this Layer will be random inizialized in
             [-starting_points, starting_points]
+        preload_w: list
+            List with the weights preloaded, if None initialize to random.
+        preloaded_bias : list
+            List with the bias preloaded, if None initialize to random.
+        from_backup : boolean
+            If true preload the weights and bias.
         """
         self.input=np.array(input_matrix) # Storing the input matrix
         self.val_data=np.array(val_matrix)
@@ -57,12 +63,13 @@ class Layer:
         - s is the the number of unit in the layer (unit_number).
         '''
 
-        if from_backup: self.weight = preload_w
+        if from_backup: 
+            self.weight = np.array(preload_w)
         else:
             self.weight=np.random.uniform(-starting_points,starting_points,
                                           size=(unit_number, num_features ) )
         # Array of bias for each unit in the Layer
-        if from_backup: self.bias = preload_w
+        if from_backup: self.bias = np.array(preload_bias)
         else:
             self.bias=np.random.uniform(- starting_points, starting_points,
                                         size = unit_number )
