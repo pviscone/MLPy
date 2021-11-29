@@ -2,6 +2,7 @@
 Implementation of the Multi Layer Perceptron.
 """
 import time
+import os
 import numpy as np
 #from numba import njit # <---- Decomment for a 5x speed up
 from utils.losses import MEE_MSE
@@ -11,8 +12,8 @@ class MLP:
     """
     Multi Layer Perceptron class.
     """
-    def __init__(self, structure, func, starting_points,
-                        eta=0.1, lamb=0, norm_L=2, alpha=0, nesterov=False):
+    def __init__(self, structure = [], func = None, starting_points = 0.1,
+                 eta=0.1, lamb=0, norm_L=2, alpha=0, nesterov=False, directory_name = None):
         """
         __init__ function of the class.
 
@@ -41,17 +42,48 @@ class MLP:
             from a random uniform distribution in the interval:
                 [-starting_point[i], starting_point[i]]
         """
-        self.structure=structure #numero di unità per ogni layer
-        self.network=[]
-        # list of tuple with (function, parameter of funtcion)
-        self.func=[f if isinstance(f, (tuple, list)) else (f, 1) for f in func]
-        self.starting_points=starting_points #lista degli start_point
-        self.eta = eta
-        self.lamb = lamb
-        self.norm_L = norm_L
-        self.alpha = alpha
-        self.nesterov = nesterov
+        self.directory_name = directory_name
+        if self.directory_name == None:
+            self.structure=structure #numero di unità per ogni layer
+            # list of tuple with (function, parameter of funtcion)
+            self.func=[f if isinstance(f, (tuple, list)) else (f, 1) for f in func]
+            self.starting_points=starting_points #lista degli start_point
+            self.eta = eta
+            self.lamb = lamb
+            self.norm_L = norm_L
+            self.alpha = alpha
+            self.nesterov = nesterov
+        else:
+            if self.directory_name[-1] != '/': self.directory_name += '/'
+            with open(self.directory_name + 'net_info', 'r') as f:
+                for line in f:
+                    attr = line.split(' -> ')[0][2:]
+                    raw_val = line.split(' -> ')[1][:-1]
+                    if attr == 'structure':
+                        struct = raw_val[1:-1].split(', ')
+                        val = [int(num) for num in struct]
+                    elif attr == 'func':
+                        val = []
+                        funcs = raw_val[1:-2].split('), ')
+                        for fs in funcs:
+                            f_name = fs.split(', ')[0][2:-1]
+                            f_param = int(fs.split(', ')[1])
+                            tuple_f = (f_name, f_param)
+                            val.append(tuple_f)
+                    elif attr == 'starting_points':
+                        struct = raw_val[1:-1].split(', ')
+                        val = [float(num) for num in struct]
+                    elif attr == 'nesterov':
+                        if line.split(' ->')[1][:-1] == 'False':
+                            val = False
+                        elif line.split(' ->')[1][:-1] == 'True':
+                            val = True
+                        else: val = False
+                    else:
+                        val = float(line.split(' ->')[1])
+                    setattr(self, attr, val)
 
+        self.network=[]
         self.train_MEE = []
         self.train_MSE = []
         self.val_MEE = []
@@ -157,7 +189,7 @@ class MLP:
         self.feedforward()
         return self.network[-1].out
 
-    def create_net(self, input_data,val_data):
+    def create_net(self, input_data, val_data):
         """
         Feed the input of the net and propagate it
 
@@ -166,13 +198,36 @@ class MLP:
         input_data : list or numpy 2d array
             Array with the data in input to the MLP.
         """
-        for layer,num_unit in enumerate(self.structure):
-            if layer==0: #If empty, initializing the neural network
-                self.network.append(Layer(num_unit,input_data,val_matrix=val_data,func=self.func[layer],
-                                          starting_points=self.starting_points[layer]))
-            else:
-                self.network.append(Layer(num_unit,self.network[layer-1].out, val_matrix=self.network[layer-1].out_val,func=self.func[layer],
-                                          starting_points=self.starting_points[layer]))
+        if self.directory_name == None:
+            for layer,num_unit in enumerate(self.structure):
+                if layer==0: #If empty, initializing the neural network
+                    self.network.append(Layer(num_unit,input_data,
+                                        val_matrix=val_data,
+                                        func=self.func[layer],
+                                        starting_points=self.starting_points[layer]))
+                else:
+                    self.network.append(Layer(num_unit,self.network[layer-1].out, 
+                                        val_matrix=self.network[layer-1].out_val,
+                                        func=self.func[layer],
+                                        starting_points=self.starting_points[layer]))
+        else:
+            for layer,num_unit in enumerate(self.structure):
+                bias_w = np.loadtxt(directory_name + f'layer{layer}.txt')
+                bias = bias_w[:, 0]
+                w = bias_w[:, 1:]
+                if layer==0: #If empty, initializing the neural network
+                    self.network.append(Layer(num_unit,input_data,
+                                        val_matrix=val_data,
+                                        func=self.func[layer],
+                                        preload_w = w,
+                                        preload_bias = bias))
+                else:
+                    self.network.append(Layer(num_unit,self.network[layer-1].out, 
+                                        val_matrix=self.network[layer-1].out_val,
+                                        func=self.func[layer],
+                                        preload_w = w,
+                                        preload_bias = bias))
+
 
     def feedforward(self):
         """ Move the input to the output of the net"""
@@ -223,3 +278,18 @@ class MLP:
 #        db = np.sum(delta, axis = 0)
 #        return dW, db
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+    def save_network(self, directory_name):
+        net_dict = self.__dict__
+        skip_list = ['network', 'directory_name', 'train_MEE', 'train_MSE', 
+                     'val_MEE', 'val_MSE', 'epoch']
+        # Write general info of the net
+        if not os.path.exists(directory_name):
+            os.makedirs(directory_name)
+        with open(directory_name + 'net_info', 'w') as f:
+            for net_attr in net_dict.keys():
+                if net_attr not in skip_list:
+                    f.write(f'# {net_attr} -> {net_dict[net_attr]}\n')
+        for i, layer in enumerate(self.network):
+            np.savetxt(directory_name + f'layer{i}.txt', np.c_[layer.bias, layer.weight])
