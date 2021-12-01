@@ -159,7 +159,7 @@ class MLP:
             string_time = f'  [wait {remain_time:.1f} s]'
             print(f'[Epoch {self.epoch}]' + string_err + string_time + ' '*10, end = '\r', flush = True)
 
-            if i==save_rate:
+            if i%save_rate==0:
                 self.save_network(filename)
 
             # Updating epoch
