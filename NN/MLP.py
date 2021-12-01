@@ -79,6 +79,7 @@ class MLP:
                 self.epoch = epoch_to_restore
             # Create a net with empty input/val just to be able to predict without training
             self.create_net(np.empty(data['input_data_shape']), np.empty(data['val_data_shape']))
+            # Reload the error scores up to the epoch required
             self.train_MEE = self.train_MEE[:self.epoch]
             self.train_MSE = self.train_MSE[:self.epoch]
             self.val_MEE = self.val_MEE[:self.epoch]
@@ -306,11 +307,15 @@ class MLP:
             with open(filename, 'r') as json_file:
                 save_dict = json.load(json_file) # Just load the json and go on
 
-        # overwrite the val, train curves
-        save_dict['train_MEE'] = self.train_MEE
-        save_dict['train_MSE'] = self.train_MSE
-        save_dict['val_MEE'] = self.val_MEE
-        save_dict['val_MSE'] = self.val_MSE
+            # Overwrite the parameters that change during training
+            # overwrite the val, train curves
+            save_dict['train_MEE'] = self.train_MEE
+            save_dict['train_MSE'] = self.train_MSE
+            save_dict['val_MEE'] = self.val_MEE
+            save_dict['val_MSE'] = self.val_MSE
+    
+            #overwrite the number of epoch
+            save_dict['epoch'] = self.epoch
 
         # Saving the weights and the bias for each layer
         weights_list = []
