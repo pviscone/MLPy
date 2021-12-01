@@ -9,8 +9,8 @@ class Layer:
     """
     Layer of the Neural Network.
     """
-    def __init__(self, unit_number, input_matrix,val_matrix=[], 
-                 func = ("sigmoid",1), starting_points = 0.1, 
+    def __init__(self, unit_number, input_matrix,val_matrix=[],
+                 func = ("sigmoid",1), starting_points = 0.1,
                  preload_w = None, preload_bias = None, from_backup = False):
         """
         __init__ of class Layer.
@@ -63,7 +63,7 @@ class Layer:
         - s is the the number of unit in the layer (unit_number).
         '''
 
-        if from_backup: 
+        if from_backup:
             self.weight = np.array(preload_w)
         else:
             self.weight=np.random.uniform(-starting_points,starting_points,

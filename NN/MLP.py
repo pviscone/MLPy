@@ -75,7 +75,7 @@ class MLP:
                     if ('weights' not in key) and ('bias' not in key):
                         setattr(self, key, val)
             # If epoch_to_restore = -1 restore the last epoch
-            if epoch_to_restore != -1: 
+            if epoch_to_restore != -1:
                 self.epoch = epoch_to_restore
             # Create a net with empty input/val just to be able to predict without training
             self.create_net(np.empty(data['input_data_shape']), np.empty(data['val_data_shape']))
@@ -166,7 +166,7 @@ class MLP:
             print(f'[Epoch {self.epoch}]' + string_err + string_time + ' '*10, end = '\r', flush = True)
             if (i%save_rate==0) and (save_rate >= 0):
                 self.save_network(filename)
-            
+
             # Updating epoch
             self.epoch += 1
 
@@ -201,7 +201,7 @@ class MLP:
         input_data : list or numpy 2d array
             Array with the data in input to the MLP.
         """
-        if self.filename == None: 
+        if self.filename == None:
             from_backup = False
             w, bias = [None]*len(self.structure), [None]*len(self.structure)
         else:
@@ -211,15 +211,15 @@ class MLP:
                 w = data[f'weights_epoch{self.epoch}']
                 bias = data[f'bias_epoch{self.epoch}']
         for layer,num_unit in enumerate(self.structure):
-            if layer==0: 
+            if layer==0:
                 self.network.append(Layer(num_unit,input_data,
                                     val_matrix=val_data,
                                     func=self.func[layer],
                                     preload_w = w[layer],
-                                    preload_bias = bias[layer], 
+                                    preload_bias = bias[layer],
                                     from_backup = from_backup))
             else:
-                self.network.append(Layer(num_unit,self.network[layer-1].out, 
+                self.network.append(Layer(num_unit,self.network[layer-1].out,
                                     val_matrix=self.network[layer-1].out_val,
                                     func=self.func[layer],
                                     preload_w = w[layer],
@@ -291,7 +291,7 @@ class MLP:
         path_file = Path(filename) # Create a path object
         if not os.path.exists(path_file.parent): # If the folder not exist create it
             os.makedirs(path_file.parent)
-        if not path_file.is_file(): # If the file doesn't exist initialize 
+        if not path_file.is_file(): # If the file doesn't exist initialize
 #                                   # the net parameters
             net_dict = self.__dict__.copy() # Dict of the MLP object
             # Stuff that we don't write to the output file
@@ -313,7 +313,6 @@ class MLP:
             save_dict['train_MSE'] = self.train_MSE
             save_dict['val_MEE'] = self.val_MEE
             save_dict['val_MSE'] = self.val_MSE
-    
             #overwrite the number of epoch
             save_dict['epoch'] = self.epoch
 
@@ -322,8 +321,8 @@ class MLP:
         bias_list = []
         for i, layer in enumerate(self.network):
             weights_list.append(layer.weight.tolist())
-            bias_list.append(layer.bias.tolist()) 
- 
+            bias_list.append(layer.bias.tolist())
+
         save_dict[f'weights_epoch{self.epoch}'] = weights_list
         save_dict[f'bias_epoch{self.epoch}'] = bias_list
 
