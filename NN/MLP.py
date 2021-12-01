@@ -75,10 +75,15 @@ class MLP:
                     if ('weights' not in key) and ('bias' not in key):
                         setattr(self, key, val)
             # If epoch_to_restore = -1 restore the last epoch
-            if epoch_to_restore == -1: self.epoch_to_restore = self.epoch
-            else: self.epoch_to_restore = epoch_to_restore
+            if epoch_to_restore != -1: 
+                self.epoch = epoch_to_restore
             # Create a net with empty input/val just to be able to predict without training
             self.create_net(np.empty(data['input_data_shape']), np.empty(data['val_data_shape']))
+            self.train_MEE = self.train_MEE[:self.epoch]
+            self.train_MSE = self.train_MSE[:self.epoch]
+            self.val_MEE = self.val_MEE[:self.epoch]
+            self.val_MSE = self.val_MSE[:self.epoch]
+
 
     def __getattr__(self,attr):
         """Get the atribute of MLP"""
@@ -158,10 +163,9 @@ class MLP:
             remain_time = mean_for_loop*(epoch-i)
             string_time = f'  [wait {remain_time:.1f} s]'
             print(f'[Epoch {self.epoch}]' + string_err + string_time + ' '*10, end = '\r', flush = True)
-
-            if i%save_rate==0:
+            if (i%save_rate==0) and (save_rate >= 0):
                 self.save_network(filename)
-
+            
             # Updating epoch
             self.epoch += 1
 
@@ -203,8 +207,8 @@ class MLP:
             from_backup = True
             with open(self.filename, 'r') as json_file:
                 data = json.load(json_file)
-                w = data[f'weights_epoch{self.epoch_to_restore}']
-                bias = data[f'bias_epoch{self.epoch_to_restore}']
+                w = data[f'weights_epoch{self.epoch}']
+                bias = data[f'bias_epoch{self.epoch}']
         for layer,num_unit in enumerate(self.structure):
             if layer==0: 
                 self.network.append(Layer(num_unit,input_data,
@@ -288,7 +292,7 @@ class MLP:
             os.makedirs(path_file.parent)
         if not path_file.is_file(): # If the file doesn't exist initialize 
 #                                   # the net parameters
-            net_dict = self.__dict__ # Dict of the MLP object
+            net_dict = self.__dict__.copy() # Dict of the MLP object
             # Stuff that we don't write to the output file
             skip_list = ['network', 'filename']
             # (network will be written below)
@@ -302,15 +306,23 @@ class MLP:
             with open(filename, 'r') as json_file:
                 save_dict = json.load(json_file) # Just load the json and go on
 
+        # overwrite the val, train curves
+        save_dict['train_MEE'] = self.train_MEE
+        save_dict['train_MSE'] = self.train_MSE
+        save_dict['val_MEE'] = self.val_MEE
+        save_dict['val_MSE'] = self.val_MSE
+
         # Saving the weights and the bias for each layer
         weights_list = []
         bias_list = []
         for i, layer in enumerate(self.network):
             weights_list.append(layer.weight.tolist())
-            bias_list.append(layer.bias.tolist())
+            bias_list.append(layer.bias.tolist()) 
+ 
         save_dict[f'weights_epoch{self.epoch}'] = weights_list
         save_dict[f'bias_epoch{self.epoch}'] = bias_list
 
         # Save the output file
         with open(filename, 'w') as outfile:
             json.dump(save_dict, outfile)
+
