@@ -129,6 +129,9 @@ class MLP:
         # If the net is just an empty list fill it with the layers
         if len(self.network) == 0:
             self.create_net(input_data, val_data)
+        else:
+            self.network[0].input = input_data
+            self.network[0].val_data = val_data
 
         if self.filename != None: # If is a preloaded net fill the input
             self.network[0].input = input_data
@@ -259,25 +262,33 @@ class MLP:
         labels : list or numpy 2d array
             Labels of the input_data.
         """
+
         for reverse_layer_number,layer in enumerate(self.network[::-1]):
-            if reverse_layer_number==0:
-                delta=((labels-layer.out)*layer.der_func(layer.net))
+            if self.nesterov:
+                layer.dw_nest=self.alpha*layer.dW_1
             else:
-                delta=(np.matmul(delta,weight_1)*layer.der_func(layer.net))
-            weight_1=layer.weight
+                layer.dw_nest=0
+            if reverse_layer_number==0:
+                delta=((labels-layer.out)*layer.der_func(layer.net_nest))
+            else:
+                delta=(np.matmul(delta,weight_1)*layer.der_func(layer.net_nest))
+            weight_1=layer.weight+layer.dw_nest
 
 #xxxxxxxxxxx Comment here for  5x speed up xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
-            dW=np.sum([np.outer(i,j) for i,j in zip(delta,layer.input)], axis=0) #batch
-            db=np.sum(delta,axis=0)
+            grad_W=np.sum([np.outer(i,j) for i,j in zip(delta,layer.input)], axis=0) #batch
+            grad_b=np.sum(delta,axis=0)
 #xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 
 #%%%%%%%%%%% Decomment here for 5x speed up %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 #            dW, db = self._jit_update_weight(delta, layer.input)
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-            layer.weight += self.eta*dW - self.lamb * (np.abs(layer.weight)**(self.norm_L-1))*np.sign(layer.weight)
-            layer.bias   += self.eta*db
-
+            dW = self.eta*grad_W - self.lamb * (np.abs(layer.weight)**(self.norm_L-1))*np.sign(layer.weight)
+            db = self.eta*grad_b
+            layer.weight+=dW+self.alpha*layer.dW_1
+            layer.bias  +=db+self.alpha*layer.db_1
+            layer.dW_1 = dW
+            layer.db_1 = db
 #%%%% Decomment the block for a 5x speed up %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 #    @staticmethod
 #    @njit(cache = True, fastmath = True)

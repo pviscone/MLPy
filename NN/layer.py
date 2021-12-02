@@ -51,6 +51,9 @@ class Layer:
         self.input=np.array(input_matrix) # Storing the input matrix
         self.val_data=np.array(val_matrix)
         self.unit_number=unit_number      # Storing the number of units
+        self.dW_1=0 #Needed for the momentum in backprop
+        self.db_1=0 #Needed for the momentum in backprop
+        self.dw_nest=0 #Needed for nestorov momentum
         num_features = np.shape(self.input)[1] # Number of input features
         '''
         The weight matrix has the structure:
@@ -86,6 +89,14 @@ class Layer:
         weight (adding the bias).
         """
         return self.input.dot( self.weight.T ) + self.bias
+
+    @property
+    def net_nest(self):
+        """
+        This property evaluate the dot product between the inputs and the
+        weight (adding the bias).
+        """
+        return self.input.dot( (self.weight+self.dw_nest).T ) + self.bias
 
     @property
     def out(self):
