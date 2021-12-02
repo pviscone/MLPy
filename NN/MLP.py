@@ -265,14 +265,14 @@ class MLP:
 
         for reverse_layer_number,layer in enumerate(self.network[::-1]):
             if self.nesterov:
-                dw_old=self.alpha*layer.dW_1
+                layer.dw_nest=self.alpha*layer.dW_1
             else:
-                dw_old=0
+                layer.dw_nest=0
             if reverse_layer_number==0:
-                delta=((labels-layer.out)*layer.der_func(layer.net))
+                delta=((labels-layer.out)*layer.der_func(layer.net_nest))
             else:
-                delta=(np.matmul(delta,weight_1)*layer.der_func(layer.net))
-            weight_1=layer.weight+dw_old
+                delta=(np.matmul(delta,weight_1)*layer.der_func(layer.net_nest))
+            weight_1=layer.weight+layer.dw_nest
 
 #xxxxxxxxxxx Comment here for  5x speed up xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
             grad_W=np.sum([np.outer(i,j) for i,j in zip(delta,layer.input)], axis=0) #batch
