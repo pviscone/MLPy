@@ -143,14 +143,11 @@ class MLP:
                 shuffle(input_data, labels)
                 for tr, lab in mini_batch(input_data,labels,batch_size):
                     self.network[0].input = tr
-                    self.network[0].labels = lab
                     self.feedforward()
                     self.learning_step(lab)
                 # Train dataset #
                 self.network[0].input = input_data
-                self.network[0].labels = labels
                 self.feedforward()
-                self.learning_step(labels)
             else:
                 self.feedforward()
                 self.learning_step(labels)
