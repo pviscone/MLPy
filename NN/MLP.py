@@ -139,17 +139,21 @@ class MLP:
         print(f'Starting training {self.epoch} epoch', end = '\r')
         for i in range(epoch):
             start_loop = time.time()
-            shuffle(input_data, labels)
-            for tr, lab in mini_batch(input_data,labels,batch_size):
-                self.network[0].input = tr
-                self.network[0].labels = lab
+            if batch_size!=input_data.shape[0]:
+                shuffle(input_data, labels)
+                for tr, lab in mini_batch(input_data,labels,batch_size):
+                    self.network[0].input = tr
+                    self.network[0].labels = lab
+                    self.feedforward()
+                    self.learning_step(lab)
+                # Train dataset #
+                self.network[0].input = input_data
+                self.network[0].labels = labels
                 self.feedforward()
-                self.learning_step(lab)
-            # Train dataset #
-            self.network[0].input = input_data
-            self.network[0].labels = labels
-            self.feedforward()
-            self.learning_step(labels)
+                self.learning_step(labels)
+            else:
+                self.feedforward()
+                self.learning_step(labels)
             MEE, MSE = MEE_MSE(labels,self.network[-1].out)
             self.train_MEE.append(MEE)
             self.train_MSE.append(MSE)
