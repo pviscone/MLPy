@@ -91,7 +91,7 @@ class MLP:
         return [getattr(lay,attr) for lay in self.network]
 
     def train(self, input_data, labels, val_data, val_labels, epoch,
-              clean_net = False, save_rate = -1, filename = None):
+              clean_net = False, save_rate = -1, batch_size=-1,filename = None):
         """
         Parameters
         ----------
@@ -131,17 +131,26 @@ class MLP:
         if self.filename != None: # If is a preloaded net fill the input
             self.network[0].input = input_data
             self.network[0].val_data = val_data
-
+        if batch_size == -1:
+            batch_size = input_data.shape[0]
         # Start train the net
         total_time = 0
         real_start = time.time()
         print(f'Starting training {self.epoch} epoch', end = '\r')
         for i in range(epoch):
             start_loop = time.time()
-
-            # Train dataset #
-            self.feedforward()
-            self.learning_step(labels)
+            if batch_size!=input_data.shape[0]:
+                shuffle(input_data, labels)
+                for tr, lab in mini_batch(input_data,labels,batch_size):
+                    self.network[0].input = tr
+                    self.feedforward()
+                    self.learning_step(lab)
+                # Train dataset #
+                self.network[0].input = input_data
+                self.feedforward()
+            else:
+                self.feedforward()
+                self.learning_step(labels)
             MEE, MSE = MEE_MSE(labels,self.network[-1].out)
             self.train_MEE.append(MEE)
             self.train_MSE.append(MSE)
@@ -330,3 +339,13 @@ class MLP:
         with open(filename, 'w') as outfile:
             json.dump(save_dict, outfile)
 
+def mini_batch(input_data,labels, batch_size):
+    for i in range(0,len(input_data),batch_size):
+        yield input_data[i:i+batch_size,:], labels[i:i+batch_size,:]
+
+def shuffle(input_data, labels):
+    seed=np.random.randint(2**32-1)
+    rand_state = np.random.RandomState(seed)
+    rand_state.shuffle(input_data)
+    rand_state.seed(seed)
+    rand_state.shuffle(labels)
