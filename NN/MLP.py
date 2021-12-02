@@ -139,6 +139,7 @@ class MLP:
         print(f'Starting training {self.epoch} epoch', end = '\r')
         for i in range(epoch):
             start_loop = time.time()
+            shuffle(input_data, labels)
             for tr, lab in mini_batch(input_data,labels,batch_size):
                 self.network[0].input = tr
                 self.network[0].labels = lab
@@ -340,3 +341,10 @@ class MLP:
 def mini_batch(input_data,labels, batch_size):
     for i in range(0,len(input_data),batch_size):
         yield input_data[i:i+batch_size,:], labels[i:i+batch_size,:]
+
+def shuffle(input_data, labels):
+    seed=np.random.randint(2**32-1)
+    rand_state = np.random.RandomState(seed)
+    rand_state.shuffle(input_data)
+    rand_state.seed(seed)
+    rand_state.shuffle(labels)
