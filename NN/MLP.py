@@ -15,7 +15,6 @@ class MLP:
     Multi Layer Perceptron class.
     """
     def __init__(self, structure = [], func = None, starting_points=None,
-                 eta=0.1, lamb=0, norm_L=2, alpha=0, nesterov=False, 
                  filename = None, epoch_to_restore = -1):
         """
         __init__ function of the class.
@@ -59,16 +58,11 @@ class MLP:
             self.func=[f if isinstance(f, (tuple, list)) else (f, 1) for f in func]
             if starting_points == None: self.starting_points = [0.1]*len(self.structure)
             else: self.starting_points=starting_points # start_point list for random weights
-            self.eta = eta # Learning rate
-            self.lamb = lamb # Tikhonov regularization
-            self.norm_L = norm_L # Tikhonov regularization norm
-            self.alpha = alpha # Parameter for momentum
-            self.nesterov = nesterov # If the user want the nesterov momentum
-            self.epoch = 0 # set number of epoch to 0
             self.train_MEE = []
             self.train_MSE = []
             self.val_MEE = []
             self.val_MSE = []
+            self.epoch = 0 # set number of epoch to 0
         else: # If the user want to load a pretrained model
             with open(self.filename) as json_file: # open the file with the json net
                 data = json.load(json_file) # Load the file in a dictionary
@@ -92,6 +86,7 @@ class MLP:
         return [getattr(lay,attr) for lay in self.network]
 
     def train(self, input_data, labels, val_data, val_labels, epoch,
+              eta=0.1, lamb=0, norm_L=2, alpha=0, nesterov=False,
               clean_net = False, save_rate = -1, batch_size=-1,filename = None):
         """
         Parameters
@@ -116,6 +111,12 @@ class MLP:
         labels = np.array(labels)
         val_data = np.array(val_data)
         val_labels = np.array(val_labels)
+
+        self.eta = eta # Learning rate
+        self.lamb = lamb # Tikhonov regularization
+        self.norm_L = norm_L # Tikhonov regularization norm
+        self.alpha = alpha # Parameter for momentum
+        self.nesterov = nesterov # If the user want the nesterov momentum
 
         # Reset the net if clean_net == True
         if clean_net:
