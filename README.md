@@ -11,7 +11,7 @@ Lista ordinata delle cose da fare
     - [x] k fold
 - [x] Funzione di Rescaling/Standardizzazione dei dati (media 0, varianza 1 oppure range [0,1])
 - [x] Implementare funzione per salvare la rete (anche ad es. ogni N epoche (tramite flag booleana))
-- [ ] Implementare minibatch
+- [x] Implementare minibatch
 - [ ] Implementare momento
     - [ ] Normale
     - [ ] nesterov
