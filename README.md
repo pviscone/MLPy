@@ -12,9 +12,9 @@ Lista ordinata delle cose da fare
 - [x] Funzione di Rescaling/Standardizzazione dei dati (media 0, varianza 1 oppure range [0,1])
 - [x] Implementare funzione per salvare la rete (anche ad es. ogni N epoche (tramite flag booleana))
 - [x] Implementare minibatch
-- [ ] Implementare momento
-    - [ ] Normale
-    - [ ] nesterov
+- [x] Implementare momento
+    - [x] Normale
+    - [x] nesterov
 - [ ] Implementare funzione per creare diverse strategie di learning rate adattivo
 - [ ] Implementare criteri di stopping
 - [ ] Implementare diverse strategie di inizializzazione dei pesi
