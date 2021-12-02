@@ -130,7 +130,7 @@ class MLP:
         if len(self.network) == 0:
             self.create_net(input_data, val_data)
         else:
-            self.network[0].input_data = input_data
+            self.network[0].input = input_data
             self.network[0].val_data = val_data
 
         if self.filename != None: # If is a preloaded net fill the input
