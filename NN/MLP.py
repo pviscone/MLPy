@@ -14,7 +14,7 @@ class MLP:
     """
     Multi Layer Perceptron class.
     """
-    def __init__(self, structure = [], func = None, starting_points = 0.1,
+    def __init__(self, structure = [], func = None, starting_points=None,
                  eta=0.1, lamb=0, norm_L=2, alpha=0, nesterov=False, 
                  filename = None, epoch_to_restore = -1):
         """
@@ -57,7 +57,8 @@ class MLP:
             self.structure=structure # Number of units per layer
             # list of tuple with (function, parameter of funtcion)
             self.func=[f if isinstance(f, (tuple, list)) else (f, 1) for f in func]
-            self.starting_points=starting_points # start_point list for random weights
+            if starting_points == None: self.starting_points = [0.1]*len(self.structure)
+            else: self.starting_points=starting_points # start_point list for random weights
             self.eta = eta # Learning rate
             self.lamb = lamb # Tikhonov regularization
             self.norm_L = norm_L # Tikhonov regularization norm
@@ -223,6 +224,7 @@ class MLP:
             if layer==0:
                 self.network.append(Layer(num_unit,input_data,
                                     val_matrix=val_data,
+                                    starting_points = self.starting_points[layer],
                                     func=self.func[layer],
                                     preload_w = w[layer],
                                     preload_bias = bias[layer],
@@ -230,6 +232,7 @@ class MLP:
             else:
                 self.network.append(Layer(num_unit,self.network[layer-1].out,
                                     val_matrix=self.network[layer-1].out_val,
+                                    starting_points = self.starting_points[layer],
                                     func=self.func[layer],
                                     preload_w = w[layer],
                                     preload_bias = bias[layer],
