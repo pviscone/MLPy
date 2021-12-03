@@ -1,5 +1,5 @@
 """
-Implementation of the Multi Layer Perceptron.
+Implementation of the Cascade Correlation Neural Network.
 """
 
 import time
@@ -35,10 +35,8 @@ class CCNN:
         self.num_hidden = 0 
         self.transfer_line = None
 
-    from utils_CC._add_hidden_neuron import add_hidden_neuron, jit_gradient
-    from utils_CC._train import train, output_learning_step
-
-    jit_gradient = staticmethod(jit_gradient)
+    from utils_CC._add_hidden_neuron import add_hidden_neuron
+    from utils_CC._train import train
 
     @property
     def out_net(self):
