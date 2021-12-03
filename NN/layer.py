@@ -9,7 +9,9 @@ class Layer:
     """
     Layer of the Neural Network.
     """
-    def __init__(self, unit_number, input_matrix,val_matrix=[], func = ("sigmoid",1), starting_points = 0.1):
+    def __init__(self, unit_number, input_matrix,val_matrix=[],
+                 func = ("sigmoid",1), starting_points = 0.1,
+                 preload_w = None, preload_bias = None, from_backup = False):
         """
         __init__ of class Layer.
 
@@ -39,10 +41,19 @@ class Layer:
         starting_points : float
             The weight of this Layer will be random inizialized in
             [-starting_points, starting_points]
+        preload_w: list
+            List with the weights preloaded, if None initialize to random.
+        preloaded_bias : list
+            List with the bias preloaded, if None initialize to random.
+        from_backup : boolean
+            If true preload the weights and bias.
         """
         self.input=np.array(input_matrix) # Storing the input matrix
         self.val_data=np.array(val_matrix)
         self.unit_number=unit_number      # Storing the number of units
+        self.dW_1=0 #Needed for the momentum in backprop
+        self.db_1=0 #Needed for the momentum in backprop
+        self.dw_nest=0 #Needed for nestorov momentum
         num_features = np.shape(self.input)[1] # Number of input features
         '''
         The weight matrix has the structure:
@@ -55,11 +66,16 @@ class Layer:
         - s is the the number of unit in the layer (unit_number).
         '''
 
-        self.weight=np.random.uniform(-starting_points,starting_points,
-                                        size=(unit_number, num_features ) )
+        if from_backup:
+            self.weight = np.array(preload_w)
+        else:
+            self.weight=np.random.uniform(-starting_points,starting_points,
+                                          size=(unit_number, num_features ) )
         # Array of bias for each unit in the Layer
-        self.bias=np.random.uniform(- starting_points, starting_points,
-                                    size = unit_number )
+        if from_backup: self.bias = np.array(preload_bias)
+        else:
+            self.bias=np.random.uniform(- starting_points, starting_points,
+                                        size = unit_number )
 
         #Storing the activation function and his derivative
         self.function, self.slope=func
@@ -73,6 +89,14 @@ class Layer:
         weight (adding the bias).
         """
         return self.input.dot( self.weight.T ) + self.bias
+
+    @property
+    def net_nest(self):
+        """
+        This property evaluate the dot product between the inputs and the
+        weight (adding the bias).
+        """
+        return self.input.dot( (self.weight+self.dw_nest).T ) + self.bias
 
     @property
     def out(self):
