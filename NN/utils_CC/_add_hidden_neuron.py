@@ -75,7 +75,7 @@ def add_hidden_neuron(self, labels, n_candidate = 50, max_epoch = 500):
         out.weight = np.append(out.weight, np.random.uniform(-self.w_init, self.w_init))
     self.num_hidden += 1
 
-@njit
+@njit(cache = True, fastmath = True)
 def jit_gradient(transfer_line, num_output, o_p, dnet, out_net, delta_E, weight, labels):
     w_grad = np.zeros(weight.shape)
     b_grad = 0
