@@ -112,7 +112,7 @@ class MLP:
         val_data = np.array(val_data)
         val_labels = np.array(val_labels)
 
-        self.eta = eta # Learning rate
+        self.eta_function = eta # Learning rate function
         self.lamb = lamb # Tikhonov regularization
         self.norm_L = norm_L # Tikhonov regularization norm
         self.alpha = alpha # Parameter for momentum
@@ -144,6 +144,8 @@ class MLP:
         print(f'Starting training {self.epoch} epoch', end = '\r')
         for i in range(epoch):
             start_loop = time.time()
+            self.eta=self.eta_function(epoch=self.epoch,tr_MEE=self.train_MEE,
+                                       val_MEE=self.val_MEE)
             if batch_size!=input_data.shape[0]:
                 shuffle(input_data, labels)
                 for tr, lab in mini_batch(input_data,labels,batch_size):
