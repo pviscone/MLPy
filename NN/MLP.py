@@ -153,10 +153,17 @@ class MLP:
         real_start = time.time()
         print(f'Starting training {self.epoch} epoch', end = '\r')
         for i in range(epoch):
+
             start_loop = time.time()
-            if self.eta_params != None:
+
+            #### Set up eta (eventually as a function) ####
+            if self.eta_params != None: # if None eta is just a number
+                # Get the name of the attribute and his value in a dictionary
+                # for each attribute in the eta_keys (the string passed by user)
                 eta_dict = {name_attr:getattr(self, name_attr) for name_attr in self.eta_keys}
+                # Call the eta function with that parameters
                 self.eta = self.eta_function(*self.eta_params, **eta_dict)
+
             if batch_size!=input_data.shape[0]:
                 shuffle(input_data, labels)
                 for tr, lab in mini_batch(input_data,labels,batch_size):
