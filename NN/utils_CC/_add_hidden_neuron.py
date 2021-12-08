@@ -34,10 +34,14 @@ def add_hidden_neuron(self, labels, n_candidate = 50, max_epoch = 500):
         w_grad, b_grad = gradient(labels, candidate, delta_E, out_net)
         dw_prev = self.eta * w_g_prev
         db_prev = self.eta * b_g_prev
-        dw = dw_prev * w_grad / (w_g_prev - w_grad)
-        db = db_prev * b_grad / (b_g_prev - b_grad)
-        candidate.weight += w_grad
-        candidate.bias   += b_grad
+        if (w_g_prev - w_grad != 0).all() and (b_g_prev - b_grad != 0):
+            dw = dw_prev * w_grad / (w_g_prev - w_grad)
+            db = db_prev * b_grad / (b_g_prev - b_grad)
+        else:
+            dw = dw_prev
+            db = db_prev
+        candidate.weight += dw#_grad
+        candidate.bias   += db#_grad
         return w_grad, b_grad
 
     def gradient(labels, candidate, delta_E, out_net):
@@ -51,13 +55,14 @@ def add_hidden_neuron(self, labels, n_candidate = 50, max_epoch = 500):
     best_neu = candidate
     best_S = 0
     for i in range(n_candidate):
-        S_prev = 0
         epoch = 0
         w_g_prev, b_g_prev = grad_desc_step(labels, candidate)
+        S_start = compute_S(labels, candidate)
+        S_prev = S_start
         while (epoch < max_epoch) or (S_incr > 1/100):
-            w_g_prev, b_g_prev = quick_prop_step(labels, candidate, w_g_prev, b_g_prev)
+            w_g_prev, b_g_prev = grad_desc_step(labels, candidate)
             S = compute_S(labels, candidate)
-            S_incr = np.abs(1 - S_prev/S)
+            S_incr = np.abs((S - S_prev)/(S-S_start))
             S_prev = S
             epoch += 1
         if S > best_S:
