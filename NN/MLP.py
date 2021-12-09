@@ -86,7 +86,7 @@ class MLP:
         return [getattr(lay,attr) for lay in self.network]
 
     def train(self, input_data, labels, val_data, val_labels, epoch,
-              eta=0.1, lamb=0, norm_L=2, alpha=0, nesterov=False,
+              eta=0.1, eta_params = None, lamb=0, norm_L=2, alpha=0, nesterov=False,
               clean_net = False, save_rate = -1, batch_size=-1,filename = None):
         """
         Parameters
@@ -112,11 +112,21 @@ class MLP:
         val_data = np.array(val_data)
         val_labels = np.array(val_labels)
 
-        self.eta = eta # Learning rate
         self.lamb = lamb # Tikhonov regularization
         self.norm_L = norm_L # Tikhonov regularization norm
         self.alpha = alpha # Parameter for momentum
         self.nesterov = nesterov # If the user want the nesterov momentum
+
+        if callable(eta): # if eta is a function
+            if eta_params == None: # if the user pass no parameters
+                raise TypeError('Try to set eta as a function without parameters')
+            else:
+                self.eta_keys = [k for k in eta_params if isinstance(k, str)] # pass the key 
+                self.eta_params = [p for p in eta_params if isinstance(p, (int, float))] # pass the numbers
+                self.eta_function = eta
+        else: 
+            self.eta = eta #if eta is just a number
+            self.eta_params = None
 
         # Reset the net if clean_net == True
         if clean_net:
@@ -143,7 +153,17 @@ class MLP:
         real_start = time.time()
         print(f'Starting training {self.epoch} epoch', end = '\r')
         for i in range(epoch):
+
             start_loop = time.time()
+
+            #### Set up eta (eventually as a function) ####
+            if self.eta_params != None: # if None eta is just a number
+                # Get the name of the attribute and his value in a dictionary
+                # for each attribute in the eta_keys (the string passed by user)
+                eta_dict = {name_attr:getattr(self, name_attr) for name_attr in self.eta_keys}
+                # Call the eta function with that parameters
+                self.eta = self.eta_function(*self.eta_params, **eta_dict)
+
             if batch_size!=input_data.shape[0]:
                 shuffle(input_data, labels)
                 for tr, lab in mini_batch(input_data,labels,batch_size):
