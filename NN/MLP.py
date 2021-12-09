@@ -6,7 +6,7 @@ import os
 from pathlib import Path
 import json
 import numpy as np
-#from numba import njit # <---- Decomment for a 5x speed up
+from numba import njit # <---- Decomment for a 5x speed up
 from utils.losses import MEE_MSE
 from layer import Layer
 
@@ -295,12 +295,12 @@ class MLP:
             weight_1=layer.weight+layer.dw_nest
 
 #xxxxxxxxxxx Comment here for  5x speed up xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
-            grad_W=np.sum([np.outer(i,j) for i,j in zip(delta,layer.input)], axis=0) #batch
-            grad_b=np.sum(delta,axis=0)
+#            grad_W=np.sum([np.outer(i,j) for i,j in zip(delta,layer.input)], axis=0) #batch
+#            grad_b=np.sum(delta,axis=0)
 #xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 
 #%%%%%%%%%%% Decomment here for 5x speed up %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-#            dW, db = self._jit_update_weight(delta, layer.input)
+            grad_W, grad_b = self._jit_update_weight(delta, layer.input)
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
             dW = self.eta*grad_W - self.lamb * (np.abs(layer.weight)**(self.norm_L-1))*np.sign(layer.weight)
@@ -310,16 +310,16 @@ class MLP:
             layer.dW_1 = dW
             layer.db_1 = db
 #%%%% Decomment the block for a 5x speed up %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-#    @staticmethod
-#    @njit(cache = True, fastmath = True)
-#    def _jit_update_weight(delta, inputs):
-#        list_prod = np.empty( (*delta.shape, inputs.shape[1]) )
-#        for i in range(len(delta)): # speed up this loop on data with numba!
-#            list_prod[i] = np.outer(delta[i], inputs[i])
-#        dW = np.sum(list_prod, axis = 0)
-#        db = np.sum(delta, axis = 0)
-#        return dW, db
-#%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    @staticmethod
+    @njit(cache = True, fastmath = True)
+    def _jit_update_weight(delta, inputs):
+        list_prod = np.empty( (*delta.shape, inputs.shape[1]) )
+        for i in range(len(delta)): # speed up this loop on data with numba!
+            list_prod[i] = np.outer(delta[i], inputs[i])
+        dW = np.sum(list_prod, axis = 0)
+        db = np.sum(delta, axis = 0)
+        return dW, db
+
 
 
     def save_network(self, filename):
