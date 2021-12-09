@@ -282,14 +282,14 @@ class MLP:
         labels : list or numpy 2d array
             Labels of the input_data.
         """
-
+        num_data=labels.shape[0]
         for reverse_layer_number,layer in enumerate(self.network[::-1]):
             if self.nesterov:
                 layer.dw_nest=self.alpha*layer.dW_1
             else:
                 layer.dw_nest=0
             if reverse_layer_number==0:
-                delta=((labels-layer.out)*layer.der_func(layer.net_nest))
+                delta=((labels-layer.out)*layer.der_func(layer.net_nest))/num_data
             else:
                 delta=(np.matmul(delta,weight_1)*layer.der_func(layer.net_nest))
             weight_1=layer.weight+layer.dw_nest
@@ -303,8 +303,8 @@ class MLP:
             grad_W, grad_b = self._jit_update_weight(delta, layer.input)
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-            dW = self.eta*grad_W - self.lamb * (np.abs(layer.weight)**(self.norm_L-1))*np.sign(layer.weight)
-            db = self.eta*grad_b
+            dW = (self.eta)*grad_W - self.lamb * (np.abs(layer.weight)**(self.norm_L-1))*np.sign(layer.weight)
+            db = (self.eta)*grad_b
             layer.weight+=dW+self.alpha*layer.dW_1
             layer.bias  +=db+self.alpha*layer.db_1
             layer.dW_1 = dW
