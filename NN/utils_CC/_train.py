@@ -7,9 +7,10 @@ from neuron_CC import Neuron
 from numba import njit
 from utils.losses import MEE_MSE
 
-def train(self, input_data, labels, min_epoch = 10, max_epoch = 1000, 
+def train(self, input_data, labels, eta = 0.1, min_epoch = 10, max_epoch = 1000, 
           max_hidden = 0, stop_threshold = 0.1, stack_threshold = 0.1,
-          n_candidate = 10, max_candidate_epoch = 100):
+          n_candidate = 10, max_candidate_epoch = 100, 
+          min_candidate_epoch = None, candidate_eta = None):
     """
     (Function of the class)
     Train function for the Cascade Correlation.
@@ -20,6 +21,8 @@ def train(self, input_data, labels, min_epoch = 10, max_epoch = 1000,
         Training data.
     labels : numpy 2d array
         Labels of the training data.
+    eta : float
+        Learning rate for output neurons. Default is 0.1.
     min_epoch : int
         Minimum number of epoch for the training of the output neuron before
         to start thinking about add a new unit.
@@ -45,7 +48,15 @@ def train(self, input_data, labels, min_epoch = 10, max_epoch = 1000,
         Number of candidate neurons tested before add a new neuron to the net.
     max_candidate_epoch : int
         Maximum epoch for the training of the hidden neurons.
+    min_candidate_epoch : int
+        Minimum epoch for the training of the hidden neurons, if None the 
+        algorithm will choose automatically 
+            min_candidate_epoch = 0.1*max_candidate_epoch
+    candidate_eta : float
+        Learning rate for the learning of hidden neurons, if None it will be 
+        used the same value of eta.
     """
+    self.eta = eta # Create the learning rate
     if self.num_input == 0: # If the network is empty create a new net
         self.create_net(input_data, labels.shape[1]) # Create new net
         self.num_hidden = 0 # Initialize zero hidden
@@ -63,7 +74,6 @@ def train(self, input_data, labels, min_epoch = 10, max_epoch = 1000,
         epoch = 0 # Set the epoch to zero
         keep_train = True # Keep train parameter for output training
         start_epoch = self.epoch # Epoch of starting training
-        self.feedforward() # Update the transfer line
         while keep_train: # 
             # TRAIN OUT PHASE #################################################
             output_learning_step(labels, self.out_neurons, 
@@ -101,7 +111,9 @@ def train(self, input_data, labels, min_epoch = 10, max_epoch = 1000,
         if add_neuron: # If add a Neuron is True add the neuron
             print('adding an hidden...', end='\r')
             self.add_hidden_neuron(labels, n_candidate = n_candidate, 
-                                   max_epoch = max_candidate_epoch)
+                                   candidate_eta = candidate_eta,
+                                   max_epoch = max_candidate_epoch,
+                                   min_epoch = min_candidate_epoch)
             print('adding an hidden -> Hidden added, training the new model.')
         ########################################################################
     print(log_string) # Print the log info about the training
