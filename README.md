@@ -15,7 +15,7 @@ Lista ordinata delle cose da fare
 - [x] Implementare momento
     - [x] Normale
     - [x] nesterov
-- [ ] Implementare funzione per creare diverse strategie di learning rate adattivo
+- [x] Implementare funzione per creare diverse strategie di learning rate adattivo
 - [ ] Implementare criteri di stopping
 - [ ] Implementare diverse strategie di inizializzazione dei pesi
 - [ ] Implementare Grid Search per scelta del modello
