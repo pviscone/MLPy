@@ -62,6 +62,8 @@ class MLP:
             self.train_MSE = []
             self.val_MEE = []
             self.val_MSE = []
+            self.train_accuracy=[]
+            self.val_accuracy=[]
             self.epoch = 0 # set number of epoch to 0
         else: # If the user want to load a pretrained model
             with open(self.filename) as json_file: # open the file with the json net
@@ -134,6 +136,8 @@ class MLP:
             self.train_MSE = []
             self.val_MEE = []
             self.val_MSE = []
+            self.train_accuracy=[]
+            self.val_accuracy=[]
             self.epoch = 0
 
         # If the net is just an empty list fill it with the layers
@@ -179,12 +183,13 @@ class MLP:
             MEE, MSE = MEE_MSE(labels,self.network[-1].out)
             self.train_MEE.append(MEE)
             self.train_MSE.append(MSE)
-
+            self.train_accuracy.append(1-np.sum(np.abs(np.heaviside(self.network[-1].out-0.5,0)-labels))/len(labels))
             # Validation dataset #
             self.feedforward_validation()
             MEE, MSE = MEE_MSE(val_labels, self.network[-1].out_val)
             self.val_MEE.append(MEE)
             self.val_MSE.append(MSE)
+            self.val_accuracy.append(1-np.sum(np.abs(np.heaviside(self.network[-1].out_val-0.5,0)-val_labels))/len(val_labels))
 
             # Printing the error
             string_val_err = f'  [val MEE = {self.val_MEE[-1]:.4f}]'
