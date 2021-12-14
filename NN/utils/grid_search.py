@@ -2,7 +2,7 @@ import numpy as np
 import itertools # Include in standard python library
 import time 
 
-def grid_search(model, dict_params, verbose = 0):
+def grid_search(model,  dict_params, verbose = 0):
     """
     Function that implement a grid search algorithm for the model selection.
 
@@ -34,23 +34,10 @@ def grid_search(model, dict_params, verbose = 0):
         dict_candidate = {k:p for k, p in zip(list_params_keys, params)}
         # Append that dictionary to the final list
         list_candidates.append(dict_candidate)
-
+       
     for i, dict_params in enumerate(list_candidates):
-        print(f'{i} -> Parameters in dictionary are:', dict_params)
-        print('       The function get:', model(**dict_params))
-        # Define a model
-#        candidate_model = model()# oh shit
-        # train the model
-#        candidate_model.train()# oh shit again
-        # Some parameters are in train and other in the model definition.
-        # Why dont' we put all in the model definition? 
-        # - it is not good to change the parameters manually on the middle of
-        #   the training (separate speech for epoch that need to stay in train)
-        # - Manually changing parameters during the training is dangerous for
-        #   reproducibility: we need to mark every single modification...
-        # - Manually changing is not automatic: better an adaptive learning
-        #   step that change after some epochs...
-        # - This function became so easy if we put all in main:
-        #   Just "candidate_model = (**dict_params)" 
-        #   and then "candidate_model.train()"
+        dict_model = {k.split('_')[1]: v for k, v in dict_params.items() if k.startswith('model')}
+        dict_train = {k.split('_')[1]: v for k, v in dict_params.items() if k.startswith('train')}
+        candidate = model(**dict_model)
+        candidate.train(0, **dict_train)
     return 
