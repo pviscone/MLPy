@@ -89,7 +89,8 @@ class MLP:
 
     def train(self, input_data, labels, val_data, val_labels, epoch,
               eta=0.1, eta_params = None, lamb=0, norm_L=2, alpha=0, nesterov=False,
-              clean_net = False, save_rate = -1, batch_size=-1,filename = None):
+              clean_net = False, save_rate = -1, batch_size=-1, filename = None, 
+              error_threshold = None, patience = 1):
         """
         Parameters
         ----------
@@ -123,12 +124,14 @@ class MLP:
             if eta_params == None: # if the user pass no parameters
                 raise TypeError('Try to set eta as a function without parameters')
             else:
-                self.eta_keys = [k for k in eta_params if isinstance(k, str)] # pass the key 
-                self.eta_params = [p for p in eta_params if isinstance(p, (int, float))] # pass the numbers
-                self.eta_function = eta
-        else: 
-            self.eta = eta #if eta is just a number
-            self.eta_params = None
+                self.eta_keys = [k for k in eta_params 
+                                 if isinstance(k, str)] # attribute names
+                self.eta_params = [p for p in eta_params 
+                                   if isinstance(p, (int, float))] # values
+                self.eta_function = eta # eta is a function now
+        else: # Eta is not a function
+            self.eta = eta # then eta is just a number
+            self.eta_params = None # Just for discriminate from prev. case
 
         # Reset the net if clean_net == True
         if clean_net:
@@ -152,9 +155,11 @@ class MLP:
             self.network[0].val_data = val_data
         if batch_size == -1:
             batch_size = input_data.shape[0]
+
         # Start train the net
         total_time = 0
         real_start = time.time()
+        calm = patience
         print(f'Starting training {self.epoch} epoch', end = '\r')
         for i in range(epoch):
 
@@ -168,6 +173,7 @@ class MLP:
                 # Call the eta function with that parameters
                 self.eta = self.eta_function(*self.eta_params, **eta_dict)
 
+            #### Train with the mini batch ####
             if batch_size!=input_data.shape[0]:
                 shuffle(input_data, labels)
                 for tr, lab in mini_batch(input_data,labels,batch_size):
@@ -206,8 +212,21 @@ class MLP:
             if (i%save_rate==0) and (save_rate >= 0):
                 self.save_network(filename)
 
+            if (self.epoch > 2) and (error_threshold != None):
+                total_descend_train = self.train_MSE[-1] - self.train_MSE[0]
+                total_descend_val = self.val_MSE[-1] - self.val_MSE[0]
+                last_descend_train  = (self.train_MSE[-1] - self.train_MSE[-2])*self.epoch
+                last_descend_val  = (self.val_MSE[-1] - self.val_MSE[-2])*self.epoch
+                last_on_tot_train = last_descend_train/total_descend_train
+                last_on_tot_val = last_descend_val/total_descend_val
+                if (last_on_tot_train < error_threshold) or (last_on_tot_val < error_threshold):
+                    calm = calm-1 # The calm is finishing...
+            if calm == 0: break # Lost the patience: stop
+
             # Updating epoch
             self.epoch += 1
+                
+
 
         # Final print
         print(f'Epoch {self.epoch}:' + string_err + ' '*30, end = '\n')
@@ -231,7 +250,7 @@ class MLP:
         self.feedforward()
         return self.network[-1].out
 
-    def create_net(self, input_data, val_data, w_list = [], bias_list = []):
+    def create_net(self, input_data, val_data):
         """
         Feed the input of the net and propagate it
 
@@ -250,23 +269,16 @@ class MLP:
                 w = data[f'weights_epoch{self.epoch}']
                 bias = data[f'bias_epoch{self.epoch}']
         for layer,num_unit in enumerate(self.structure):
-            if layer==0:
-                self.network.append(Layer(num_unit,input_data,
-                                    val_matrix=val_data,
-                                    starting_points = self.starting_points[layer],
-                                    func=self.func[layer],
-                                    preload_w = w[layer],
-                                    preload_bias = bias[layer],
-                                    from_backup = from_backup))
-            else:
-                self.network.append(Layer(num_unit,self.network[layer-1].out,
-                                    val_matrix=self.network[layer-1].out_val,
-                                    starting_points = self.starting_points[layer],
-                                    func=self.func[layer],
-                                    preload_w = w[layer],
-                                    preload_bias = bias[layer],
-                                    from_backup = from_backup))
-
+            if layer==0: in_train, in_val = input_data, val_data
+            else: 
+                in_train = self.network[layer-1].out 
+                in_val   = self.network[layer-1].out_val
+            # Define the layer
+            lay = Layer(num_unit, in_train, val_matrix=in_val,
+                        starting_points = self.starting_points[layer],
+                        func=self.func[layer], preload_w = w[layer],
+                        preload_bias = bias[layer], from_backup = from_backup)
+            self.network.append(lay) # add the layer
 
     def feedforward(self):
         """ Move the input to the output of the net"""
