@@ -5,7 +5,7 @@ from numba import njit
 
 def add_hidden_neuron(self, labels, n_candidate = 50, candidate_eta = None,
                       candidate_stack_threshold = 0.05, patience = 10, 
-                      max_epoch = 500, min_epoch = None):
+                      max_epoch = 500, min_epoch = None, candidate_lambda = 0.):
     """
     Function that manage the addition of an hidden neuron in the net.
     The neuron is added directy in self.hidden, also the array of weights of 
@@ -87,8 +87,10 @@ def add_hidden_neuron(self, labels, n_candidate = 50, candidate_eta = None,
         """
         # Compute the gradient
         w_grad, b_grad = gradient(labels, candidate, delta_E, out_net)
-        candidate.weight += candidate_eta*w_grad # update weights
-        candidate.bias   += candidate_eta*b_grad # update bias
+        reg_w = candidate_lambda * np.abs(candidate.weight) # Regularizat. term
+        reg_b = candidate_lambda * np.abs(candidate.bias) # Regularizat. term
+        candidate.weight += candidate_eta*w_grad - reg_w # update weights
+        candidate.bias   += candidate_eta*b_grad - reg_b # update bias
     
     def gradient(labels, candidate, delta_E, out_net):
         """
