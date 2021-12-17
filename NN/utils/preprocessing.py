@@ -79,11 +79,6 @@ def k_fold(input_matrix, k=4):
 
 
 
-
-
-
-
-
 class Normalize:
     def normalize(self,input_matrix):
         self.mean=np.mean(input_matrix,axis=0)
