@@ -7,7 +7,8 @@ from neuron_CC import Neuron
 from numba import njit
 from utils.losses import MEE_MSE
 
-def train(self, input_data, labels, eta = 0.1, min_epoch = 10, max_epoch = 1000, 
+def train(self, input_data, labels, val_data = None, val_labels = None, 
+          eta = 0.1, min_epoch = 10, max_epoch = 1000, candidate_lambda = 0.,
           max_hidden = 0, stop_threshold = 0.1, stack_threshold = 0.1,
           n_candidate = 10, max_candidate_epoch = 100, 
           min_candidate_epoch = None, candidate_eta = None):
@@ -57,11 +58,13 @@ def train(self, input_data, labels, eta = 0.1, min_epoch = 10, max_epoch = 1000,
         used the same value of eta.
     """
     self.eta = eta # Create the learning rate
+    n_data, n_features = input_data.shape
+    if isinstance(val_data, np.ndarray): check_val = True
+    else: check_val = False
     if self.num_input == 0: # If the network is empty create a new net
         self.create_net(input_data, labels.shape[1]) # Create new net
         self.num_hidden = 0 # Initialize zero hidden
     else: # Otherwise just fill the input in the transfer line
-        n_data, n_features = input_data.shape
         self.transfer_line = np.ones((n_data, n_features + self.num_hidden))
         self.transfer_line[:, :n_features] = input_data
 
@@ -93,6 +96,13 @@ def train(self, input_data, labels, eta = 0.1, min_epoch = 10, max_epoch = 1000,
                                    ' ended cause error stacked\n'
             self.train_MEE.append(MEE) # append errors
             self.train_MSE.append(MSE)
+            if check_val:
+                MEE, MSE = MEE_MSE(val_labels, self.predict(val_data))
+                self.val_MEE.append(MEE)
+                self.val_MSE.append(MSE)
+                self.transfer_line = np.ones((n_data, n_features + self.num_hidden))
+                self.transfer_line[:, :n_features] = input_data
+                self.feedforward()
             epoch += 1 # update local epochs
             self.epoch+=1 # update global epochs
             if MSE < stop_threshold: # If error required reached stop train
@@ -113,7 +123,8 @@ def train(self, input_data, labels, eta = 0.1, min_epoch = 10, max_epoch = 1000,
             self.add_hidden_neuron(labels, n_candidate = n_candidate, 
                                    candidate_eta = candidate_eta,
                                    max_epoch = max_candidate_epoch,
-                                   min_epoch = min_candidate_epoch)
+                                   min_epoch = min_candidate_epoch, 
+                                   candidate_lambda = candidate_lambda)
             print('adding an hidden -> Hidden added, training the new model.')
         ########################################################################
     print(log_string) # Print the log info about the training
