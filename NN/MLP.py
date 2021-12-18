@@ -89,7 +89,7 @@ class MLP:
 
     def train(self, input_data, labels, val_data, val_labels, epoch,
               eta=0.1, eta_params = None, lamb=0, norm_L=2, alpha=0, nesterov=False,
-              clean_net = False, save_rate = -1, batch_size=-1,filename = None):
+              clean_net = False, save_rate = -1, batch_size=-1,filename = None,verbose=True):
         """
         Parameters
         ----------
@@ -202,7 +202,8 @@ class MLP:
             mean_for_loop = total_time/(i+1)
             remain_time = mean_for_loop*(epoch-i)
             string_time = f'  [wait {remain_time:.1f} s]'
-            print(f'[Epoch {self.epoch}]' + string_err + string_time + ' '*10, end = '\r', flush = True)
+            if verbose:
+                print(f'[Epoch {self.epoch}]' + string_err + string_time + ' '*10, end = '\r', flush = True)
             if (i%save_rate==0) and (save_rate >= 0):
                 self.save_network(filename)
 
