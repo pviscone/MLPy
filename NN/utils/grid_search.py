@@ -11,17 +11,17 @@ def grid_search(model, dict_models, dict_params, input_data, labels, val_data, v
     ----------
     Model : Class Object
         Model for the task.
-        The model need to have a function called "train" wich take some of the
+        The model need to have a function called "train" witch take some of the
         parameters in dict_params.
     dict_models : dictionary
         Dictionary containing the name of the models as keys and other 
-        dictionaries as values. This dictionaries contanin the parameters
+        dictionaries as values. This dictionaries contain the parameters
         of the model to test.
     dict_params: dictionary
         Parameter of Model to test in the search, each key of the dictionary 
-        is a parameter of model, the value correspondind to each key is a list
+        is a parameter of model, the value corresponding to each key is a list
         of parameters to test for that key.
-        The key of the dictionary need to be written in the following way:
+        The keys of the dictionary need to be written in the following way:
         - "model_params"
         - "train_params"
         The first kind of key denote a parameter of the model, the second 
