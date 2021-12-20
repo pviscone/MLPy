@@ -6,7 +6,7 @@ import os
 from pathlib import Path
 import json
 import numpy as np
-from numba import njit # <---- Decomment for a 5x speed up
+from numba import njit
 from utils.losses import MEE_MSE
 from layer import Layer
 
@@ -89,7 +89,7 @@ class MLP:
 
     def train(self, input_data, labels, val_data, val_labels, epoch,
               eta=0.1, eta_params = None, lamb=0, norm_L=2, alpha=0, nesterov=False,
-              clean_net = False, save_rate = -1, batch_size=-1,filename = None):
+              clean_net = False, save_rate = -1, batch_size=-1,filename = None,verbose=True, RMSProp=False,beta=0.8):
         """
         Parameters
         ----------
@@ -113,6 +113,8 @@ class MLP:
         labels = np.array(labels)
         val_data = np.array(val_data)
         val_labels = np.array(val_labels)
+        self.RMSProp = RMSProp
+        self.beta = beta
 
         self.lamb = lamb # Tikhonov regularization
         self.norm_L = norm_L # Tikhonov regularization norm
@@ -202,7 +204,8 @@ class MLP:
             mean_for_loop = total_time/(i+1)
             remain_time = mean_for_loop*(epoch-i)
             string_time = f'  [wait {remain_time:.1f} s]'
-            print(f'[Epoch {self.epoch}]' + string_err + string_time + ' '*10, end = '\r', flush = True)
+            if verbose:
+                print(f'[Epoch {self.epoch}]' + string_err + string_time + ' '*10, end = '\r', flush = True)
             if (i%save_rate==0) and (save_rate >= 0):
                 self.save_network(filename)
 
@@ -307,9 +310,12 @@ class MLP:
 #%%%%%%%%%%% Decomment here for 5x speed up %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
             grad_W, grad_b = self._jit_update_weight(delta, layer.input)
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-            dW = (self.eta)*grad_W - self.lamb * (np.abs(layer.weight)**(self.norm_L-1))*np.sign(layer.weight)
-            db = (self.eta)*grad_b
+            if self.RMSProp:
+                dW,db=layer.RMSProp(grad_W,grad_b,self.eta,self.beta)
+                dW-=self.lamb * (np.abs(layer.weight)**(self.norm_L-1))*np.sign(layer.weight)
+            else:
+                dW = (self.eta)*grad_W - self.lamb * (np.abs(layer.weight)**(self.norm_L-1))*np.sign(layer.weight)
+                db = (self.eta)*grad_b
             layer.weight+=dW+self.alpha*layer.dW_1
             layer.bias  +=db+self.alpha*layer.db_1
             layer.dW_1 = dW

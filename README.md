@@ -18,7 +18,7 @@ Lista ordinata delle cose da fare
 - [x] Implementare funzione per creare diverse strategie di learning rate adattivo
 - [ ] Implementare criteri di stopping
 - [ ] Implementare diverse strategie di inizializzazione dei pesi
-- [ ] Implementare Grid Search per scelta del modello
+- [x] Implementare Grid Search per scelta del modello
 
 ### Robe aggiuntive
 Da fare solo se si rendono visibilmente necessarie:
