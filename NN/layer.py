@@ -54,6 +54,8 @@ class Layer:
         self.dW_1=0 #Needed for the momentum in backprop
         self.db_1=0 #Needed for the momentum in backprop
         self.dw_nest=0 #Needed for nestorov momentum
+        self.vdw=0 #Needed for RMSProp
+        self.vdb=0 #Needed for RMSProp
         num_features = np.shape(self.input)[1] # Number of input features
         '''
         The weight matrix has the structure:
@@ -123,3 +125,14 @@ class Layer:
         """
         #scorrendo le colonne trovi i net di tutti i neuroni, scorrendo le righe cambi pattern
         return self.func(self.net_val)
+
+    def RMSProp(self, grad_W, grad_b, eta, beta):
+        """
+        Update the weights and bias of the Layer using RMSProp.
+        """
+        # Update the weights
+        self.vdw = beta*self.vdw + (1-beta)*grad_W**2
+        self.vdb = beta*self.vdb + (1-beta)*grad_b**2
+        dW = eta*grad_W/np.sqrt(self.vdw + 1e-8)
+        db = eta*grad_b/np.sqrt(self.vdb + 1e-8)
+        return dW, db
