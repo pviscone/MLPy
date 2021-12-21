@@ -89,7 +89,7 @@ class MLP:
 
     def train(self, input_data, labels, val_data, val_labels, epoch,
               eta=0.1, eta_params = None, lamb=0, norm_L=2, alpha=0, nesterov=False,
-              clean_net = False, save_rate = -1, batch_size=-1,filename = None,verbose=True, RMSProp=False,beta=0.8):
+              clean_net = False, save_rate = -1, batch_size=-1,filename = None,verbose=True, RMSProp=False,beta=0.8,
               error_threshold = None, patience = 1):
         """
         Parameters
@@ -216,14 +216,16 @@ class MLP:
                 self.save_network(filename)
 
             if (self.epoch > 2) and (error_threshold != None):
-                total_descend_train = self.train_MSE[-1] - self.train_MSE[0]
-                total_descend_val = self.val_MSE[-1] - self.val_MSE[0]
-                last_descend_train  = (self.train_MSE[-1] - self.train_MSE[-2])*self.epoch
-                last_descend_val  = (self.val_MSE[-1] - self.val_MSE[-2])*self.epoch
+                total_descend_train = self.train_MSE[0] - self.train_MSE[-1]
+                total_descend_val = self.val_MSE[0]- self.val_MSE[-1]
+                last_descend_train  = (self.train_MSE[-2] - self.train_MSE[-1])*self.epoch
+                last_descend_val  = (self.val_MSE[-2] - self.val_MSE[-1])*self.epoch
                 last_on_tot_train = last_descend_train/total_descend_train
                 last_on_tot_val = last_descend_val/total_descend_val
                 if (last_on_tot_train < error_threshold) or (last_on_tot_val < error_threshold):
                     calm = calm-1 # The calm is finishing...
+                else: 
+                    calm = min(patience, calm + 1)
             if calm == 0: break # Lost the patience: stop
 
             # Updating epoch
