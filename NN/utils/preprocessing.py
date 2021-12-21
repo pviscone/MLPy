@@ -79,17 +79,38 @@ def k_fold(input_matrix, k=4):
 
 
 
-class Normalize:
-    def normalize(self,input_matrix):
-        self.mean=np.mean(input_matrix,axis=0)
-        self.std=np.std(input_matrix,axis=0)
-        return (input_matrix-self.mean)/self.std
-    def denormalize(self,input_matrix):
-        return input_matrix*self.std+self.mean
-    def minmax(self,input_matrix):
-        self.max=np.max(input_matrix,axis=0)
-        self.min=np.min(input_matrix,axis=0)
-        return (input_matrix-self.min)/(self.max-self.min)
-    def deminmax(self,input_matrix):
-        return input_matrix*(self.max-self.min)+self.min
+class StandardScaler:
+    """
+    Class for the normalization with respect to mean and std.
+    """
+    def fit(self, data):
+        self.mean = np.mean(data,axis=0)
+        self.std=np.std(data,axis=0)
 
+    def fit_transform(self, data):
+        self.fit(data)
+        return self.transform(data)
+
+    def transform(self, data):
+        return ( data - self.mean ) / self.std
+
+    def inverse_transform(self, data):
+        return data*self.std+self.mean
+
+class MinMaxScaler:
+    """
+    Class for the normalization in [0,1]
+    """
+    def fit(self, data):
+        self.max=np.max(data,axis=0)
+        self.min=np.min(data,axis=0)
+
+    def fit_transform(self, data):
+        self.fit(data)
+        return self.transform(data)
+    
+    def transform(self, data):
+        return (data-self.min)/(self.max-self.min)
+
+    def inverse_transform(self, data):
+        return data*(self.max-self.min)+self.min
