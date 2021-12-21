@@ -336,14 +336,12 @@ class MLP:
     @staticmethod
     @njit(cache = True, fastmath = True)
     def _jit_update_weight(delta, inputs):
-        list_prod = np.empty( (*delta.shape, inputs.shape[1]) )
-        for i in range(len(delta)): # speed up this loop on data with numba!
-            list_prod[i] = np.outer(delta[i], inputs[i])
-        dW = np.sum(list_prod, axis = 0)
-        db = np.sum(delta, axis = 0)
+        dW = np.outer(delta[0], inputs[0])
+        db = delta[0]
+        for i in range(1, len(delta)): # speed up this loop on data with numba!
+            dW += np.outer(delta[i], inputs[i])
+            db += delta[i]
         return dW, db
-
-
 
     def save_network(self, filename):
         """
