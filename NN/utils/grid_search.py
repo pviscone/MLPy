@@ -78,7 +78,7 @@ def grid_search(model, dict_models, dict_params, input_data, labels, error, verb
                 print(f"{i} on {n_candidates}: Model {mod_name} --> " + str_param)
                 
             ###### Create and train the candidate #############################
-            best_err = np.infty
+            sum_err = 0
             if kwargs['kind'] == 'hold_out': k = 1
             elif kwargs['kind'] == 'k_fold': k = kwargs['k']
             else: raise Exception('Invalid split method')
@@ -93,10 +93,9 @@ def grid_search(model, dict_models, dict_params, input_data, labels, error, verb
                 pred_val = candidate.predict(val_k)
 
                 err_k =  error(val_labels_k, pred_val)
-                if err_k < best_err:
-                    best_err = err_k
+                sum_err += err_k
             # add the error to the list of error to position i
-            err_val_array[i] = best_err
+            err_val_array[i] = sum_err/k
             print('\n')
             i += 1
 
