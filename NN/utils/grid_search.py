@@ -2,8 +2,10 @@ import numpy as np
 import os
 import itertools # Include in standard python library
 import time 
+from . preprocessing import split
 
-def grid_search(model, dict_models, dict_params, input_data, labels, val_data, val_labels, error, verbose = False):
+
+def grid_search(model, dict_models, dict_params, input_data, labels, error, verbose = True, **kwargs):
     """
     Function that implement a grid search algorithm for the model selection.
 
@@ -31,10 +33,6 @@ def grid_search(model, dict_models, dict_params, input_data, labels, val_data, v
         Array with the data in input to the MLP.
     labels : list or numpy 2d array
         Labels of the input_data.
-    val_data : list or numpy 2d array
-        Array with the validation data in input to the MLP.
-    val_labels : list or numpy 2d array
-        Labels of the val_data.
     error: function object
         Error function for define the chart of models, this function take 2 
         parameters: the real labels and the output (predicted) labels.
@@ -75,20 +73,30 @@ def grid_search(model, dict_models, dict_params, input_data, labels, val_data, v
             dict_candidate['model_name'] = mod_name # and the model name 
             list_candidates.append(dict_candidate) # Add to list of candidates
             
-            ###### Create and train the candidate #############################
-
-            candidate = model(**dict_candidate['model'])
             if verbose: # Print only if verbose
                 str_param = f"Train parameters: {dict_candidate['train']}"
                 print(f"{i} on {n_candidates}: Model {mod_name} --> " + str_param)
+                
+            ###### Create and train the candidate #############################
+            best_err = np.infty
+            if kwargs['kind'] == 'hold_out': k = 1
+            elif kwargs['kind'] == 'k_fold': k = kwargs['k']
+            else: raise Exception('Invalid split method')
+            for _ in range(k):
+                data_k, val_k, labels_k, val_labels_k = split(input_data, labels, **kwargs)
+                candidate = model(**dict_candidate['model'])
 
-            # Train the candidate with the parameters in dict_params['train']
-            candidate.train(input_data, labels, val_data, val_labels, 
-                            **dict_candidate['train'])
-            # predict on validation data
-            pred_val = candidate.predict(val_data)
+                # Train the candidate with the parameters in dict_params['train']
+                candidate.train(data_k, labels_k, val_k, val_labels_k, 
+                        **dict_candidate['train'])
+                # predict on validation data
+                pred_val = candidate.predict(val_k)
+
+                err_k =  error(val_labels_k, pred_val)
+                if err_k < best_err:
+                    best_err = err_k
             # add the error to the list of error to position i
-            err_val_array[i] = error(val_labels, pred_val)
+            err_val_array[i] = best_err
             print('\n')
             i += 1
 
