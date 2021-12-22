@@ -215,6 +215,9 @@ class MLP:
             if (i%save_rate==0) and (save_rate >= 0):
                 self.save_network(filename)
 
+            # Updating epoch
+            self.epoch += 1
+ 
             if (self.epoch > 2) and (error_threshold != None):
                 total_descend_train = self.train_MSE[0] - self.train_MSE[-1]
                 total_descend_val = self.val_MSE[0]- self.val_MSE[-1]
@@ -227,11 +230,6 @@ class MLP:
                 else: 
                     calm = min(patience, calm + 1)
             if calm == 0: break # Lost the patience: stop
-
-            # Updating epoch
-            self.epoch += 1
-                
-
 
         # Final print
         print(f'Epoch {self.epoch}:' + string_err + ' '*30, end = '\n')
