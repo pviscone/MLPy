@@ -133,6 +133,6 @@ class Layer:
         # Update the weights
         self.vdw = beta*self.vdw + (1-beta)*grad_W**2
         self.vdb = beta*self.vdb + (1-beta)*grad_b**2
-        dW = eta*grad_W/np.sqrt(self.vdw + 1e-8)
-        db = eta*grad_b/np.sqrt(self.vdb + 1e-8)
+        dW = eta*grad_W/(np.sqrt(self.vdw) + 1e-8)
+        db = eta*grad_b/(np.sqrt(self.vdb) + 1e-8)
         return dW, db
