@@ -4,8 +4,10 @@ import matplotlib.pyplot as plt
 from numba import njit
 
 def add_hidden_neuron(self, labels, n_candidate = 50, candidate_eta = None,
+                      RMSProp = False, beta = 0.5,
                       candidate_stack_threshold = 0.05, patience = 10, 
-                      max_epoch = 500, min_epoch = None, candidate_lambda = 0.):
+                      max_epoch = 500, min_epoch = None, candidate_lambda = 0.,
+                      candidate_factor = 10):
     """
     Function that manage the addition of an hidden neuron in the net.
     The neuron is added directy in self.hidden, also the array of weights of 
@@ -45,11 +47,11 @@ def add_hidden_neuron(self, labels, n_candidate = 50, candidate_eta = None,
     # Delta Error: residual of the error E
     delta_E = E - np.mean(E, axis = 0)
 
-    def generate_neuron():
+    def generate_neuron(i):
         """Generate a basic hidden neuron"""
         return Neuron(data_shape = transfer_data_shape,
                       func = self.hidden_actv_f, 
-                      w_init = self.w_init)
+                      w_init = self.w_init*i)
 
     def compute_S(labels, candidate):
         """
@@ -87,10 +89,17 @@ def add_hidden_neuron(self, labels, n_candidate = 50, candidate_eta = None,
         """
         # Compute the gradient
         w_grad, b_grad = gradient(labels, candidate, delta_E, out_net)
+        if RMSProp:
+            dW,db=candidate.RMSProp(w_grad, b_grad, candidate_eta, beta)
+#            dW = -dW
+#            db = -db
+        else: 
+            dW = candidate_eta*w_grad
+            db = candidate_eta*b_grad
         reg_w = candidate_lambda * np.abs(candidate.weight) # Regularizat. term
         reg_b = candidate_lambda * np.abs(candidate.bias) # Regularizat. term
-        candidate.weight += candidate_eta*w_grad - reg_w # update weights
-        candidate.bias   += candidate_eta*b_grad - reg_b # update bias
+        candidate.weight += dW - reg_w # update weights
+        candidate.bias   += db - reg_b # update bias
     
     def gradient(labels, candidate, delta_E, out_net):
         """
@@ -135,13 +144,13 @@ def add_hidden_neuron(self, labels, n_candidate = 50, candidate_eta = None,
     # Loop over the candidate
     for i in range(n_candidate):
         # Generate a neuron and compute the initial S
-        candidate = generate_neuron()
+        candidate = generate_neuron(candidate_factor)
         S_start = compute_S(labels, candidate)
         # Initialize the epochs and the patience
         epoch = 0
         count_patience = 0
         if min_epoch == None: min_epoch = int(max_epoch/10) # Arbitary
-        for i in range(min_epoch): # first train for min_epoch epochs
+        for _ in range(min_epoch): # first train for min_epoch epochs
             grad_desc_step(labels, candidate)
             S = compute_S(labels, candidate)
             candidate.S_list.append(S) # Update the list of S of the candidate
@@ -153,6 +162,7 @@ def add_hidden_neuron(self, labels, n_candidate = 50, candidate_eta = None,
         while (epoch < max_epoch) and (count_patience < patience):
             grad_desc_step(labels, candidate) # Update the weights
             S = compute_S(labels, candidate)  # Compute S
+            print(f'hidd {self.num_hidden + 1}:[{i}/{n_candidate}][S={best_S:.0f}][MEE:{self.train_MEE[-1]:.2f}]   ', end='\r')
             # Evaluate the difference from the S_start
             total_S_diff = np.abs(S_start - S) 
             # Relative difference: compute how much I could move if I 
@@ -177,13 +187,14 @@ def add_hidden_neuron(self, labels, n_candidate = 50, candidate_eta = None,
     # Compute the out of this new neuron
     out_new_neu = self.hid_neurons[-1].out(self.transfer_line)
 
-    n_data = transfer_data_shape[0] # short variable name for the number of data
     # Update the transfer line adding the output of the neuron
     # NOTE: this will never change anymore!!
     self.transfer_line = np.column_stack((self.transfer_line, out_new_neu))
     # Update the output weights adding a new random value
     for out in self.out_neurons:
         out.weight = np.append(out.weight, np.random.uniform(-self.w_init, self.w_init))
+        out.vdw = np.append(out.vdw, 0)
+        out.old_dW = np.append(out.old_dW, 0)
     # Update the number of hidden neurons
     self.num_hidden += 1
 

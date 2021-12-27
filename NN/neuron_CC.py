@@ -43,6 +43,10 @@ class Neuron:
         # their training
         self.S_list = []
         self.epoch_trained = 0
+        self.vdw = np.zeros(n_prev_neurons)
+        self.vdb = 0
+        self.old_dW = np.zeros(n_prev_neurons)
+        self.old_db = 0
 
     def net(self, input_data):
         """Net function for the neuron"""
@@ -51,3 +55,14 @@ class Neuron:
     def out(self, input_data):
         """Out function for the neuron"""
         return self.func(self.net(input_data))
+
+    def RMSProp(self, grad_W, grad_b, eta, beta):
+        """
+        Update the weights and bias of the Layer using RMSProp.
+        """
+        # Update the weights
+        self.vdw = beta*self.vdw + (1-beta)*grad_W**2
+        self.vdb = beta*self.vdb + (1-beta)*grad_b**2
+        dW = eta*grad_W/(np.sqrt(self.vdw) + 1e-8)
+        db = eta*grad_b/(np.sqrt(self.vdb) + 1e-8)
+        return dW, db

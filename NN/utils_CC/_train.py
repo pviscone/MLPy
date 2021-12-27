@@ -8,10 +8,12 @@ from numba import njit
 from utils.losses import MEE_MSE
 
 def train(self, input_data, labels, val_data = None, val_labels = None, 
-          eta = 0.1, min_epoch = 10, max_epoch = 1000, candidate_lambda = 0.,
-          max_hidden = 0, stop_threshold = 0.1, stack_threshold = 0.1,
-          n_candidate = 10, max_candidate_epoch = 100, 
-          min_candidate_epoch = None, candidate_eta = None):
+          candidate_RMSProp = False, candidate_beta = 0.5,
+          RMSProp = False, beta = 0.5, alpha = 0.,
+          eta = 0.1, min_epoch = 10, tot_max_epoch = 1000, max_epoch = 100,
+          candidate_lambda = 0., max_hidden = 0, stop_threshold = 0.1, 
+          stack_threshold = 0.1, n_candidate = 10, max_candidate_epoch = 100, 
+          min_candidate_epoch = None, candidate_eta = None, candidate_factor = 10):
     """
     (Function of the class)
     Train function for the Cascade Correlation.
@@ -80,8 +82,10 @@ def train(self, input_data, labels, val_data = None, val_labels = None,
         while keep_train: # 
             # TRAIN OUT PHASE #################################################
             output_learning_step(labels, self.out_neurons, 
-                                 self.transfer_line, self.eta) # Learning step
+                                 self.transfer_line, self.eta,
+                                 RMSProp, beta, alpha) # Learning step
             MEE, MSE = MEE_MSE(labels, self.out_net) # Compute train errors
+            print(f'train [{self.num_hidden} hidd][MEE={MEE:.2f}]      ', end = '\r')
             # CHECK TRAIN STATUS PHASE ########################################
             if epoch > max(min_epoch, 1): # If epoch reach min epoch
                 # Compute the variation of error from start training to now
@@ -92,8 +96,6 @@ def train(self, input_data, labels, val_data = None, val_labels = None,
                 relative_delta_E = (last_delta_E/tot_delta_E) * epoch
                 if relative_delta_E < stack_threshold: # Stop condition
                     keep_train = False 
-                    log_string += f'Train with {self.num_hidden} hidden' +\
-                                   ' ended cause error stacked\n'
             self.train_MEE.append(MEE) # append errors
             self.train_MSE.append(MSE)
             if check_val:
@@ -106,32 +108,32 @@ def train(self, input_data, labels, val_data = None, val_labels = None,
             epoch += 1 # update local epochs
             self.epoch+=1 # update global epochs
             if MSE < stop_threshold: # If error required reached stop train
-                log_string +=f'Train with {self.num_hidden} hidden neu' +\
-                              ' ended because error low enough\n'
                 add_neuron = False
                 keep_train = False
-            if self.epoch > max_epoch: # If max_epoch reached stop training
-                log_string +=f'Train with {self.num_hidden} hidden neu' +\
-                               ' ended because max epoch reached\n'
+            if self.epoch > tot_max_epoch: # If max_epoch reached stop training
                 add_neuron = False
                 keep_train = False
+            if epoch > max_epoch:
+                keep_train = False
+                add_neuron = True
         # ADD NEURON PHASE #####################################################
         if self.num_hidden >= max_hidden: 
             add_neuron = False# Get out if max_hidden reached
         if add_neuron: # If add a Neuron is True add the neuron
-            print('adding an hidden...', end='\r')
             self.add_hidden_neuron(labels, n_candidate = n_candidate, 
                                    candidate_eta = candidate_eta,
                                    max_epoch = max_candidate_epoch,
                                    min_epoch = min_candidate_epoch, 
-                                   candidate_lambda = candidate_lambda)
-            print('adding an hidden -> Hidden added, training the new model.')
+                                   candidate_lambda = candidate_lambda,
+                                   candidate_factor = candidate_factor, 
+                                   RMSProp = candidate_RMSProp, 
+                                   beta = candidate_beta)
         ########################################################################
     print(log_string) # Print the log info about the training
 
 
 
-def output_learning_step(labels, out_neurons, transfer_line, eta):
+def output_learning_step(labels, out_neurons, transfer_line, eta, RMSProp, beta, alpha):
     """
     Learning step for the Output Neurons.
     """
@@ -146,9 +148,16 @@ def output_learning_step(labels, out_neurons, transfer_line, eta):
         # Compute the gradient of this output neuron (see the jit function)
         grad_W, grad_b = out_jit_gradient(out_from_neu, net, dnet, 
                                           n, transfer_line, labels)
+        if RMSProp:
+            dW, db = neu_out.RMSProp(grad_W, grad_b, eta, beta)
+        else:
+            dW = eta*grad_W
+            db = eta*grad_b
         # Update the weights (and bias)
-        neu_out.weight += eta*grad_W
-        neu_out.bias   += eta*grad_b
+        neu_out.weight += dW + alpha * neu_out.old_dW
+        neu_out.bias   += db + alpha * neu_out.old_db
+        neu_out.old_dW = dW
+        neu_out.old_db = db
 
 @njit(cache = True, fastmath = True)
 def out_jit_gradient(out_from_neu, net, dnet, n, inputs, labels):
