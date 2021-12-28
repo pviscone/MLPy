@@ -10,6 +10,7 @@ from numba import njit
 from utils.losses import MEE_MSE
 from layer import Layer
 
+
 class MLP:
     """
     Multi Layer Perceptron class.
@@ -405,3 +406,43 @@ def shuffle(input_data, labels):
     rand_state.shuffle(input_data)
     rand_state.seed(seed)
     rand_state.shuffle(labels)
+
+
+
+class MLP_w(MLP):
+    """
+    MultiLayerPerceptron Class with different weights initialization.
+    """
+    def __init__(self, structure = [], func = None, starting_points=None,
+                 filename = None, epoch_to_restore = -1):
+        # Create all the attribute from MLP class
+        super().__init__(structure = structure, func = func, 
+                         starting_points=starting_points, 
+                         filename = filename, epoch_to_restore = epoch_to_restore)
+
+    def train(self, *args, n_candidate = 1, test_more_init = False, **kwargs):
+        if test_more_init: # If the user want to test more random initial conditions
+            # Initialize some MLP_w parameters
+            self.candidate = None
+            self.best_candidate = None
+            self.best_error = np.infty
+            self.candidate_error = None
+            for i in range(n_candidate): # loop on the number of candidate
+                print(f'Candidate {i}')
+                # Initialize a candidate
+                self.candidate = MLP(structure = self.structure, func = self.func, 
+                                 starting_points=self.starting_points)
+                self.candidate.train(*args, **kwargs) # Train a candidate
+                # Save the last error
+                self.candidate_error = self.candidate.val_MEE[-1]
+                # If the last error is lower than the best error you find the new
+                # best model!
+                if self.candidate_error < self.best_error:
+                    self.best_candidate = self.candidate # Save the best model
+                    self.best_error = self.candidate_error # Save the best error
+            dict_best = self.best_candidate.__dict__.copy() # Dict of the candidate object
+            for key, val in dict_best.items(): # for each attribute of best_candidate
+                setattr(self, key, val) # Overwrite the attribute of MLP_w with the 
+                #                       # attribute of the best model
+        else: # It the user don't want to test more weigths (maybe already done)
+            super().train(*args, **kwargs) # Just train the model
