@@ -15,6 +15,9 @@ lin_der = lambda x, a : a
 # Relu
 relu = lambda x, a : a * np.maximum(0, x)
 relu_der = lambda x, a : a * np.heaviside(x, 1)
+#Tanh
+tanh = lambda x, a : np.tanh(a * x)
+tanh_der = lambda x, a : a*(1 - np.tanh(a * x)**2)
 
 
 def actv_funcs(f_name):
@@ -38,7 +41,8 @@ def actv_funcs(f_name):
     """
     dict_actv = {"linear" : lin,
                  "sigmoid": sigmoid,
-                 "relu"   : relu}
+                 "relu"   : relu,
+                 "tanh"   : tanh}
     if f_name not in dict_actv:
         print(f'Activation function {f_name} not found.', end = ' ')
         print(f'Adding the sigmoid activation function.')
@@ -65,7 +69,8 @@ def dactv_funcs(f_name):
     """
     derivative = {"linear" : lin_der,
                   "sigmoid": sigmoid_derivative,
-                  "relu"   : relu_der}
+                  "relu"   : relu_der,
+                  "tanh"   : tanh_der}
     if f_name not in derivative:
         print(f'Activation function {f_name} not found.', end = ' ')
         print(f'Adding the derivative of sigmoid activation function.')
