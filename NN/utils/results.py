@@ -56,6 +56,8 @@ def plot_results(network, input_data, val_data,
             else:
                 val_pred[:, fit_idx] = fitted_out_val
     if norm!= None:
+        labels = norm(labels)
+        val_labels = norm(val_labels)
         train_pred = norm(train_pred)
         val_pred = norm(val_pred)
 
@@ -96,3 +98,49 @@ def plot_results(network, input_data, val_data,
     plt.show()
     print('final train error:', MEE(labels, train_pred))
     print('final val error:', MEE(val_labels, val_pred))
+
+
+def output_correlations(model, data, labels, fit_func = None, func_args = None, mean_fit = True, plot_arrow_worse = None):
+    pred=model.predict(data)
+    x = pred[:,1]
+    y = pred[:,0]
+    lab_x = labels[:,1]
+    lab_y = labels[:,0]
+    if fit_func != None:
+        fit_out = fit_func(x, *func_args)
+        mean_out = (fit_out + y)/2
+        if mean_fit: y = mean_out
+        else: y = fit_out
+
+    plt.figure(figsize=(14,4))
+    plt.subplot(121)
+    plt.title('original vs predicted')
+    plt.scatter(lab_x, lab_y, s = 4, label = 'original')
+    plt.scatter(x, y, s = 4, label = 'predicted')
+    plt.legend()
+    
+    plt.subplot(122)
+    plt.title('Heatmap based on MEE error')
+    c = np.sqrt(np.sum((labels - pred)**2, axis = 1))
+    plt.scatter(lab_x, lab_y, s = 4, alpha = 0.3, label = 'original')
+    plt.scatter(x, y, s = 4, cmap = 'Reds', c = c)
+    plt.colorbar()
+    plt.legend()
+    plt.show()
+
+    if plot_arrow_worse != None:
+        plt.figure(figsize=(14,6))
+        n = plot_arrow_worse
+        plt.title(f'Where should go the worst {n} points')
+        labels_pred = np.column_stack((y, x))
+        s = np.argsort(c) 
+        worse = s[-n:]
+        for pr, re in zip(labels_pred[worse, :],labels[worse,:]):
+            d = np.sqrt((pr[0] - re[0])**2 + (pr[1]-re[1])**2)
+            plt.arrow(pr[1], pr[0], re[1]-pr[1], re[0]-pr[0], lw = 0.5, alpha = 0.5,
+                    head_width = d*0.1, color = 'red', length_includes_head = True, fill = False)
+        plt.scatter(lab_x[worse], lab_y[worse], s = 10, alpha = 1, c = 'blue')
+        plt.scatter(lab_x, lab_y, s = 1, alpha = 0.1, c = 'blue')
+        plt.scatter(x[worse], y[worse], s = 10, alpha = 1, c = 'orange')
+        plt.scatter(x, y, s = 1, alpha = 0.1, c = 'orange')
+        plt.show()
