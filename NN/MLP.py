@@ -29,17 +29,6 @@ class MLP:
                 [( act. func. name, func. params. ), ..., (...)]
             The number of elements (tuples) of this list is equal to the number
             of Layers of the MLP.
-        eta : float
-            The learning rate (default is 0.1)
-        lamb : float
-            The Tikhonov regularization factor (default is 0).
-        norm_L : int
-            The type of the norm for the Tikhonov regularization (default is 2,
-            euclidean).
-        alpha : int
-            Momentum factor (to do).
-        nesterov = False
-            Implementing the nesterov momentum (to do).
         starting_point : list or numpy 1d array of float
             The starting weights of each layer (i) is initialized extracting
             from a random uniform distribution in the interval:
@@ -54,6 +43,7 @@ class MLP:
         self.filename = filename
         self.network=[]
         if self.filename == None: # If the user doesn't want to restore a previous net
+            self.preloaded = False
             self.structure=structure # Number of units per layer
             # list of tuple with (function, parameter of funtcion)
             self.func=[f if isinstance(f, (tuple, list)) else (f, 1) for f in func]
@@ -67,6 +57,7 @@ class MLP:
             self.val_accuracy=[]
             self.epoch = 0 # set number of epoch to 0
         else: # If the user want to load a pretrained model
+            self.preloaded = True
             with open(self.filename) as json_file: # open the file with the json net
                 data = json.load(json_file) # Load the file in a dictionary
                 for key, val in data.items(): # Create all the attribute from file
@@ -76,7 +67,8 @@ class MLP:
             if epoch_to_restore != -1:
                 self.epoch = epoch_to_restore
             # Create a net with empty input/val just to be able to predict without training
-            self.create_net(np.empty(data['input_data_shape']), np.empty(data['val_data_shape']))
+            self.create_net( np.empty( data['input_data_shape'] ), 
+                             np.empty( data[ 'val_data_shape' ] ) )
             # Reload the error scores up to the epoch required
             self.train_MEE = self.train_MEE[:self.epoch]
             self.train_MSE = self.train_MSE[:self.epoch]
@@ -89,9 +81,10 @@ class MLP:
         return [getattr(lay,attr) for lay in self.network]
 
     def train(self, input_data, labels, val_data, val_labels, epoch,
-              eta=0.1, eta_params = None, lamb=0, norm_L=2, alpha=0, nesterov=False,
-              clean_net = False, save_rate = -1, batch_size=-1,filename = None,verbose=True, RMSProp=False,beta=0.8,
-              error_threshold = None, patience = 1):
+              eta=0.1, eta_params = None, lamb=0, norm_L=2, alpha=0, 
+              nesterov=False, clean_net = False, save_rate = -1, batch_size=-1,
+              filename = None, verbose=True, print_rate = 10, 
+              RMSProp=False, beta=0.8, error_threshold = 0., patience = -1):
         """
         Parameters
         ----------
@@ -99,16 +92,71 @@ class MLP:
             Array with the data in input to the MLP.
         labels : list or numpy 2d array
             Labels of the input_data.
-        epoch : int
-            Number of epoch for training.
         val_data : list or numpy 2d array
             Array with the validation data in input to the MLP.
         val_labels : list or numpy 2d array
             Labels of the val_data.
+        epoch : int
+            Number of epoch for training.
+        eta : float or function obect
+            The learning rate (default is 0.1), if this parameter is a 
+            function than the parameter need to be passed in eta_params.
+            The parameters need to be in the following order:
+            eta(par_1, par_2, ..., par_n, attr_1 = None, ..., attr_n = None)
+            - par_i are external parameters (constant value)
+            - attr_i are the attribute of MLP class on which the function eta
+              depends.
+        eta_params: list or None
+            If eta is a function this argument is the list of parameters of 
+            that function. The parameters have the following structure:
+            list = [*func_args, *func_kwargs]
+            - funct_args contains the constant parameters of the function: 
+              all the parameters that don't change during the training.
+            - func_kwargs contains strings with the names of the attribute 
+              on which the function eta depends. This attribute can change
+              during the training so they will be updated at each training step.
+        lamb : float
+            The Tikhonov regularization factor (default is 0).
+        norm_L : int
+            The type of the norm for the Tikhonov regularization (default is 2,
+            euclidean).
+        alpha : int
+            Momentum factor. Default is 0.
+        nesterov = False
+            If True use the accelerated (Nesterov) momentum. Default is False.
         clean_net : boolean
             If True restore the net, if False keep the pretrained net (if exist)
+            Default is False.
         save_rate : int
-            Rate of saving of the net during the training
+            Rate of saving of the net during the training (save every save_rate 
+            epoch), if -1 don't save the net. Default is -1.
+        batch_size: int
+            The size of the training batch. If -1 implement a full-batch, if 
+            1 implement sgd. For intermediate value implement a mini-batch.
+        filename : string or None
+            If save_rate != -1 the net will be saved in the dir 'filename'.
+            If None then save the net in the current dir. Default is None.
+        verbose : bool
+            If verbose = True print the training stats.
+        print_rate : int
+            If verbose = True then print the training stats every print_rate 
+            epoch. Default is 10.
+        RMSProp: boolean
+            If RMSProp = True than optimize the training with RMSProp method.
+            Default is False.
+        beta: float
+            Parameter of RMSProp. Default is 0.8
+        error_threshold: float
+            Threshold for the patience during the training.
+            This is the difference of error in the last two step divided
+            by the total difference of error during all the training, all 
+            multiplied by the number of epochs. If this value is lower than
+            error_threshold then reduce the counter of patience. 
+            When the counter reach zero interrupt the training.
+            Default is 0.
+        patience : int
+            If the threshold is not respected for patience time then interrupt
+            the training.
         """
         # Check if all the input are numpy arrays
         input_data = np.array(input_data)
@@ -153,12 +201,14 @@ class MLP:
             self.network[0].input = input_data
             self.network[0].val_data = val_data
 
-        if self.filename != None: # If is a preloaded net fill the input
+        if self.preloaded: # If is a preloaded net fill the input
             self.network[0].input = input_data
             self.network[0].val_data = val_data
         if batch_size == -1:
             batch_size = input_data.shape[0]
-
+        if save_rate != -1 and filename == None:
+            # If the user want to save the net but he doesn't specify the dir
+            filename = './' # save in the current dir
         # Start train the net
         total_time = 0
         real_start = time.time()
@@ -211,15 +261,15 @@ class MLP:
             mean_for_loop = total_time/(i+1)
             remain_time = mean_for_loop*(epoch-i)
             string_time = f'  [wait {remain_time:.1f} s]'
-            if verbose:
-                print(f'[Epoch {self.epoch}]' + string_err + string_time + ' '*10, end = '\r', flush = True)
+            if verbose and self.epoch % print_rate == 0:
+                print(f'[Epoch {self.epoch}]' + string_err + string_time + ' '*10, end = '\r', flush=True)
             if (i%save_rate==0) and (save_rate >= 0):
                 self.save_network(filename)
 
             # Updating epoch
             self.epoch += 1
  
-            if (self.epoch > 2) and (error_threshold != None):
+            if (self.epoch > 2) and (patience != -1):
                 total_descend_train = self.train_MSE[0] - self.train_MSE[-1]
                 total_descend_val = self.val_MSE[0]- self.val_MSE[-1]
                 last_descend_train  = (self.train_MSE[-2] - self.train_MSE[-1])*self.epoch
