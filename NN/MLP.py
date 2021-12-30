@@ -214,7 +214,6 @@ class MLP:
         real_start = time.time()
         calm = patience
         string_err = ""
-        print(f'Starting training {self.epoch} epoch', end = '\r')
         for i in range(epoch):
 
             start_loop = time.time()
