@@ -213,6 +213,7 @@ class MLP:
         total_time = 0
         real_start = time.time()
         calm = patience
+        string_err = ""
         print(f'Starting training {self.epoch} epoch', end = '\r')
         for i in range(epoch):
 
@@ -283,8 +284,9 @@ class MLP:
             if calm == 0: break # Lost the patience: stop
 
         # Final print
-        print(f'Epoch {self.epoch}:' + string_err + ' '*30, end = '\n')
-        print(f'Elapsed time: {time.time()-real_start} s')
+        if verbose:
+            print(f'Epoch {self.epoch}:' + string_err + ' '*30, end = '\n')
+            print(f'Elapsed time: {time.time()-real_start} s')
 
     def predict(self, data):
         """
