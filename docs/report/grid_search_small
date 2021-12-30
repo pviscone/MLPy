@@ -1,0 +1,35 @@
+
+#parametri di ricerca grid search: modelli
+
+model1 = {'structure':[10, n_feat], 'func':['sigmoid', 'linear'], 'starting_points': xavier([10, n_feat])}
+model2 = {'structure':[15, n_feat], 'func':['sigmoid', 'linear'], 'starting_points': xavier([15, n_feat])}
+model3 = {'structure':[20, n_feat], 'func':['sigmoid', 'linear'], 'starting_points': xavier([20, n_feat])}
+model5=  {'structure':[4,4,n_feat], 'func':['sigmoid','sigmoid','linear'],'starting_points': xavier([4,4, n_feat])}
+model4 = {'structure':[5,4,n_feat], 'func':['sigmoid','sigmoid','linear'],'starting_points': xavier([5,4, n_feat])}
+model6 = {'structure':[6,6,n_feat], 'func':['sigmoid','sigmoid','linear'],'starting_points': xavier([6,6, n_feat])}
+
+### parametri di training
+{'eta': [0.005, 0.001], 'alpha': array([0. , 0.1]), 'lamb': [0], 'epoch': [10000], 'RMSProp': [True], 'nesterov': [True, False], 'batch_size': [-1], 'beta': array([0.5, 0.7, 0.9]), 'patience': [100], 'error_threshold': [0]}
+
+
+#classifica
+{'train': {'eta': 0.005, 'alpha': 0.1, 'lamb': 0, 'epoch': 10000, 'RMSProp': True, 'nesterov': False, 'batch_size': -1, 'beta': 0.5, 'patience': 100, 'error_threshold': 0}, 'model': {'structure': [6, 6, 2], 'func': ['sigmoid', 'sigmoid', 'linear'], 'starting_points': [1.0, 0.7071067811865475, 0.8660254037844385]}, 'model_name': 'Model5', 'Error': 1.2048856443196698}
+
+{'train': {'eta': 0.001, 'alpha': 0.0, 'lamb': 0, 'epoch': 10000, 'RMSProp': True, 'nesterov': True, 'batch_size': -1, 'beta': 0.5, 'patience': 100, 'error_threshold': 0}, 'model': {'structure': [6, 6, 2], 'func': ['sigmoid', 'sigmoid', 'linear'], 'starting_points': [1.0, 0.7071067811865475, 0.8660254037844385]}, 'model_name': 'Model5', 'Error': 1.2096143081030624}
+
+{'train': {'eta': 0.001, 'alpha': 0.0, 'lamb': 0, 'epoch': 10000, 'RMSProp': True, 'nesterov': False, 'batch_size': -1, 'beta': 0.5, 'patience': 100, 'error_threshold': 0}, 'model': {'structure': [6, 6, 2], 'func': ['sigmoid', 'sigmoid', 'linear'], 'starting_points': [1.0, 0.7071067811865475, 0.8660254037844385]}, 'model_name': 'Model5', 'Error': 1.216820767722173}
+
+{'train': {'eta': 0.001, 'alpha': 0.1, 'lamb': 0, 'epoch': 10000, 'RMSProp': True, 'nesterov': True, 'batch_size': -1, 'beta': 0.8999999999999999, 'patience': 100, 'error_threshold': 0}, 'model': {'structure': [6, 6, 2], 'func': ['sigmoid', 'sigmoid', 'linear'], 'starting_points': [1.0, 0.7071067811865475, 0.8660254037844385]}, 'model_name': 'Model5', 'Error': 1.217468694290242}
+
+{'train': {'eta': 0.001, 'alpha': 0.1, 'lamb': 0, 'epoch': 10000, 'RMSProp': True, 'nesterov': False, 'batch_size': -1, 'beta': 0.8999999999999999, 'patience': 100, 'error_threshold': 0}, 'model': {'structure': [6, 6, 2], 'func': ['sigmoid', 'sigmoid', 'linear'], 'starting_points': [1.0, 0.7071067811865475, 0.8660254037844385]}, 'model_name': 'Model5', 'Error': 1.2209436139244048}
+
+{'train': {'eta': 0.001, 'alpha': 0.1, 'lamb': 0, 'epoch': 10000, 'RMSProp': True, 'nesterov': True, 'batch_size': -1, 'beta': 0.7, 'patience': 100, 'error_threshold': 0}, 'model': {'structure': [6, 6, 2], 'func': ['sigmoid', 'sigmoid', 'linear'], 'starting_points': [1.0, 0.7071067811865475, 0.8660254037844385]}, 'model_name': 'Model5', 'Error': 1.2221326107423232}
+
+{'train': {'eta': 0.005, 'alpha': 0.1, 'lamb': 0, 'epoch': 10000, 'RMSProp': True, 'nesterov': True, 'batch_size': -1, 'beta': 0.7, 'patience': 100, 'error_threshold': 0}, 'model': {'structure': [6, 6, 2], 'func': ['sigmoid', 'sigmoid', 'linear'], 'starting_points': [1.0, 0.7071067811865475, 0.8660254037844385]}, 'model_name': 'Model5', 'Error': 1.2229979781515357}
+
+{'train': {'eta': 0.001, 'alpha': 0.1, 'lamb': 0, 'epoch': 10000, 'RMSProp': True, 'nesterov': True, 'batch_size': -1, 'beta': 0.5, 'patience': 100, 'error_threshold': 0}, 'model': {'structure': [6, 6, 2], 'func': ['sigmoid', 'sigmoid', 'linear'], 'starting_points': [1.0, 0.7071067811865475, 0.8660254037844385]}, 'model_name': 'Model5', 'Error': 1.2242572968406278}
+
+{'train': {'eta': 0.001, 'alpha': 0.0, 'lamb': 0, 'epoch': 10000, 'RMSProp': True, 'nesterov': False, 'batch_size': -1, 'beta': 0.8999999999999999, 'patience': 100, 'error_threshold': 0}, 'model': {'structure': [6, 6, 2], 'func': ['sigmoid', 'sigmoid', 'linear'], 'starting_points': [1.0, 0.7071067811865475, 0.8660254037844385]}, 'model_name': 'Model5', 'Error': 1.2251281110266201}
+
+{'train': {'eta': 0.001, 'alpha': 0.0, 'lamb': 0, 'epoch': 10000, 'RMSProp': True, 'nesterov': False, 'batch_size': -1, 'beta': 0.7, 'patience': 100, 'error_threshold': 0}, 'model': {'structure': [6, 6, 2], 'func': ['sigmoid', 'sigmoid', 'linear'], 'starting_points': [1.0, 0.7071067811865475, 0.8660254037844385]}, 'model_name': 'Model5', 'Error': 1.2267594483097422}
+

@@ -144,3 +144,4 @@ def output_correlations(model, data, labels, fit_func = None, func_args = None, 
         plt.scatter(x[worse], y[worse], s = 10, alpha = 1, c = 'orange')
         plt.scatter(x, y, s = 1, alpha = 0.1, c = 'orange')
         plt.show()
+        return worse
