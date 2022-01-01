@@ -72,6 +72,7 @@ def k_fold(input_matrix, labels, k=4):
     Returns:
         [numpy array], [numpy array], [numpy array], [numpy array]: [training set, validation set, train_labels, validation_labels]
     """
+    if k < 2: raise Exception("Fold number must be greater than 2")
     idx_partition=int(len(input_matrix)/k)
     k_partition=k_fold.counter%k
     if k_partition<(k-1):
