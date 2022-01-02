@@ -29,5 +29,8 @@ for i in range(len(all_dict)):
     idx = sort_err_idx[i]
     final_dict_list.append(all_dict[idx])
 
-with open(mypath + 'all_dict.json','w') as fp:
+file_name = __file__.split('/')[-1]
+final_dir = __file__[:-len(file_name)]
+
+with open(final_dir + 'all_dict.json','w') as fp:
     json.dump(final_dict_list,fp)
