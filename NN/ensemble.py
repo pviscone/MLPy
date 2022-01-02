@@ -2,25 +2,46 @@ import numpy as np
 
 class bagging_ensemble:
     """
-    https://www.sciencedirect.com/science/article/pii/S000437020200190X
+    Class that averages the results of more classifier in order to 
+    reduce the variance of a final model.
+    The bootstrap algorithm of resampling is applied to train a certain 
+    number of same model. More kind of model can be combine also applying 
+    more time the boostrap algorithm.
+    Reference:
+    - https://www.sciencedirect.com/science/article/pii/S000437020200190X
     """
     def __init__(self, repetition):
+        """
+        __init__ of ensemble class.
+        
+        Parameters
+        ----------
+        repetition : int
+            Number of repetition for bootstrap algorithm.
+        """
         self.repetition = repetition
         self.list_classifier = []
         
-    def train(self, data, labels, classifier, dict_classifier, 
-              dict_train, split_procedure, dict_split):
+    def train(self, data, labels, val_data, val_labels, classifier, dict_classifier, 
+              dict_train, bootstrap = True):
         prev = len(self.list_classifier)
         all_data = np.column_stack((data, labels))
-        bootstrap_gen = self.bootstrap(all_data, self.repetition)
-        for i, all_d in enumerate(bootstrap_gen):
-            print(f'{i + prev}/{self.repetition + prev}')
-            c = classifier(**dict_classifier)
-            d = all_d[:,:-labels.shape[1]]
-            l = all_d[:,-labels.shape[1]:]
-            training, validation, train_labels, val_labels = split_procedure(d, l, **dict_split)
-            c.train(training, train_labels, validation, val_labels, **dict_train)
-            self.list_classifier.append(c)
+        if bootstrap:
+            bootstrap_gen = self.bootstrap(all_data, self.repetition)
+            for i, all_d in enumerate(bootstrap_gen):
+                print(f'{i + prev}/{self.repetition + prev}')
+                c = classifier(**dict_classifier)
+                training = all_d[:,:-labels.shape[1]]
+                train_labels = all_d[:,-labels.shape[1]:]
+                c.train(training, train_labels, val_data, val_labels, **dict_train)
+                self.list_classifier.append(c)
+        else:
+            for i in range(self.repetition):
+                print(f'{i + prev}/{self.repetition + prev}')
+                c = classifier(**dict_classifier)
+                c.train(data, labels, val_data, val_labels, **dict_train)
+                self.list_classifier.append(c)
+
         self.corr_matrix(data, labels)
 
     def predict(self, data):
@@ -33,8 +54,9 @@ class bagging_ensemble:
         if sample_size == None: sample_size = len(data)
         n_subsample = np.floor(len(data)/repetition).astype(int)
         rng = np.random.default_rng()
-        for _ in range(repetition):
-            subsample = rng.choice(data, n_subsample, axis = 0)
+        for k in range(repetition):
+            subsample = data[n_subsample * k:min(n_subsample * (k+1), sample_size) ]
+            #subsample = rng.choice(data, n_subsample, axis = 0)
             yield rng.choice(subsample, sample_size, axis = 0)
             
     @property
