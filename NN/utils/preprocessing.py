@@ -99,9 +99,18 @@ class StandardScaler:
     """
     Class for the normalization with respect to mean and std.
     """
+    def __init__(self, kind = 'single'):
+        """
+        single
+        vector
+        """
+        self.kind = kind
+
     def fit(self, data):
         self.mean = np.mean(data,axis=0)
-        self.std=np.std(data,axis=0)
+        self.std = np.std(data,axis=0)
+        if self.kind == 'vector':
+            self.std = np.max(self.std)
 
     def fit_transform(self, data):
         self.fit(data)
