@@ -57,6 +57,10 @@ def grid_search(model, dict_models, dict_params, input_data, labels, error,
         dict_candidate = {} # Fill with the info for each candidate model
         # Fill the train parameters (like {'p1':p1_val, 'p2':p2_val, ...} )
         dict_candidate['train'] = {k:p for k, p in zip(dict_params.keys(), params)}
+
+        if dict_candidate['train']['batch_size'] == -1:
+            dict_candidate['train']['eta'] *= 5
+
         dict_candidate['model'] = mod_params # set the model parameters
         dict_candidate['model_name'] = mod_name # and the model name 
         # APPEND
