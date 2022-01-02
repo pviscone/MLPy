@@ -68,21 +68,25 @@ class Layer:
         - s is the the number of unit in the layer (unit_number).
         '''
 
-        if from_backup:
-            self.weight = np.array(preload_w)
-        else:
-            self.weight=np.random.uniform(-starting_points,starting_points,
-                                          size=(unit_number, num_features ) )
-        # Array of bias for each unit in the Layer
-        if from_backup: self.bias = np.array(preload_bias)
-        else:
-            self.bias=np.random.uniform(- starting_points, starting_points,
-                                        size = unit_number )
 
         #Storing the activation function and his derivative
         self.function, self.slope=func
         self.func=lambda x : actv_funcs(self.function)(x,self.slope)
         self.der_func=lambda x : dactv_funcs(self.function)(x,self.slope)
+
+        if from_backup:
+            self.weight = np.array(preload_w)
+            self.bias = np.array(preload_bias)
+        else:
+            #For the uniform the parameter is the interval [a,b] for the normal the parameter is the standard deviation
+            if self.function=="relu" or self.function=="lrelu" or self.function=="elu":
+                self.weight=np.random.normal(0,np.sqrt(2/self.unit_number),size=(unit_number, num_features ) )
+                self.bias=np.random.normal(0,np.sqrt(2/self.unit_number),size = unit_number )
+            else:
+                self.weight=np.random.uniform(-starting_points,starting_points,size=(unit_number, num_features ) )
+                self.bias=np.random.uniform(-starting_points,starting_points,size = unit_number)
+
+
 
     @property
     def net(self):
