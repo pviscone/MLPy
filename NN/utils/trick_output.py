@@ -53,6 +53,7 @@ def trick_params(norm_name = None):
             - None : no normalization
             - 'std': StandarScaler normalization.
             - 'minmax': MinMax normalization.
+            - 'vecstd': Std with the scale of the bigger output.
 
     Returns
     -------
@@ -89,6 +90,16 @@ def trick_params(norm_name = None):
         lin_params1 = (-3., 0.23)
         lin_params2 = ( 1.7, 0.47)
         sin_params = (a, w, phi, shift, -1.31, 0.47)
+        params = (*sin_params, *lin_params1, *lin_params2)
+    elif norm_name == 'vecstd':
+    # vec Std_norm_case
+        a = 1.9e-2  
+        w = 9.7
+        phi = -3.2
+        shift = -0.5
+        lin_params1 = (-1.2, -0.81)
+        lin_params2 = ( 0.8, -4.5e-2)
+        sin_params = (a, w, phi, shift, -50, -19)
         params = (*sin_params, *lin_params1, *lin_params2)
     else: raise Exception('Unknown Normalization.')
     return list(params)
