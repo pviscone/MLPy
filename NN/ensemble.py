@@ -44,11 +44,15 @@ class bagging_ensemble:
 
         self.corr_matrix(data, labels)
 
-    def predict(self, data):
+    def predict(self, data,func=None,param=None):
         out = 0
         for c in self.list_classifier:
             out += c.predict(data)
-        return out/len(self.list_classifier)
+        out=out/len(self.list_classifier)
+        if func != None:
+            out[:,0]+=func(out[:,1],*param)
+            out[:,0]/=2
+        return out
     
     def bootstrap(self, data, repetition = 20, sample_size = None):
         if sample_size == None: sample_size = len(data)
