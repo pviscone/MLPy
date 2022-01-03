@@ -61,6 +61,7 @@ def plot_results(network, input_data, val_data,
         train_pred = norm(train_pred)
         val_pred = norm(val_pred)
 
+    '''
     if sortidx != None:
         sorted_index = np.argsort(train_pred[:, sortidx])
         train_pred = train_pred[sorted_index, :]
@@ -68,7 +69,24 @@ def plot_results(network, input_data, val_data,
 
         sorted_index = np.argsort(val_pred[:, sortidx])
         val_pred = val_pred[sorted_index, :]
-        val_labels = val_labels[sorted_index,:]
+        val_labels = val_labels[sorted_index,:]'''
+
+    if sortidx != None:
+        val_labels_x = np.sort(val_labels[:,1])
+        argsort=np.argsort(val_labels[:,1])
+        val_labels_y = val_labels[argsort,0]
+        val_pred_x=val_pred[argsort,1]
+        val_pred_y=val_pred[argsort,0]
+        val_res_x=val_pred_x-val_labels_x
+        val_res_y=val_pred_y-val_labels_y
+
+        train_labels_x = np.sort(labels[:,1])
+        argsort=np.argsort(labels[:,1])
+        train_labels_y = labels[argsort,0]
+        train_pred_x=train_pred[argsort,1]
+        train_pred_y=train_pred[argsort,0]
+        train_res_x=train_pred_x-train_labels_x
+        train_res_y=train_pred_y-train_labels_y
 
     x = np.arange(len(network.train_MEE))
 
@@ -85,14 +103,14 @@ def plot_results(network, input_data, val_data,
 
     fig.add_subplot(132)
     plt.title('Residual for training data')
-    for i in range(labels.shape[1]):
-        plt.plot(np.arange(len(labels)),labels[:,i]-train_pred[:,i],".",label=f"residual{i}")
+    plt.plot(train_labels_x, train_res_x, ".",label="Residual output 1")
+    plt.plot(train_labels_x, train_res_y, ".",label="Residual output 0")
     plt.legend()
 
     fig.add_subplot(133)
     plt.title('Residual for validation data')
-    for i in range(val_labels.shape[1]):
-        plt.plot(np.arange(len(val_labels)),val_labels[:,i]-val_pred[:,i],".",label=f"residual{i}")
+    plt.plot(val_labels_x, val_res_x, ".",label="Residual output 1")
+    plt.plot(val_labels_x, val_res_y, ".",label="Residual output 0")
     plt.legend()
     plt.tight_layout()
     plt.show()
