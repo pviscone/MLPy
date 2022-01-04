@@ -1,11 +1,12 @@
 import numpy as np
 import matplotlib.pyplot as plt
 from .losses import MEE
+import matplotlib as mpl
 
 def plot_results(network, input_data, val_data, 
                  labels, val_labels, norm = None, func = None, func_args = None, 
                  fit_idx = 0, new_out = False, mean_fit = False, 
-                 sortidx = None):
+                 sortidx = None, filename=None, savefig = False):
     """
     Function to show the results of a regressor (network).
 
@@ -89,7 +90,10 @@ def plot_results(network, input_data, val_data,
         train_res_y=train_pred_y-train_labels_y
 
     x = np.arange(len(network.train_MEE))
+    
+    font = {'size': 13}
 
+    mpl.rc('font', **font)
     fig = plt.figure(figsize=(13,4))
 
     fig.add_subplot(131)
@@ -100,19 +104,32 @@ def plot_results(network, input_data, val_data,
     plt.ylabel("MEE")
     plt.yscale("log")
     plt.legend()
+    plt.grid(which='minor',alpha = 0.5)
+    plt.grid(which='major',alpha = 0.5)
 
     fig.add_subplot(132)
     plt.title('Residual for training data')
-    plt.plot(train_labels_x, train_res_x, ".",label="Residual: output 1")
-    plt.plot(train_labels_x, train_res_y, ".",label="Residual: output 0")
-    plt.legend()
+    plt.plot(train_labels_x, train_res_x, ".",label="output 1")
+    plt.plot(train_labels_x, train_res_y, ".",label="output 0")
+    plt.legend(fontsize = 10)
+    plt.xlabel('Label output 1')
+    plt.ylabel('Residual')
+    plt.grid(alpha = 0.5)
 
     fig.add_subplot(133)
     plt.title('Residual for validation data')
-    plt.plot(val_labels_x, val_res_x, ".",label="Residual: output 1")
-    plt.plot(val_labels_x, val_res_y, ".",label="Residual: output 0")
-    plt.legend()
+    plt.plot(val_labels_x, val_res_x, ".",label="output 1")
+    plt.plot(val_labels_x, val_res_y, ".",label="output 0")
+    plt.grid(alpha = 0.5)
+    plt.legend(fontsize = 10)
+    plt.xlabel('Label output 1')
+    plt.ylabel('Residual')
+
     plt.tight_layout()
+    if savefig:
+        if filename == None:
+            raise Exception('Please give a name to the figure!')
+        plt.savefig(filename, dpi = 200)
     plt.show()
     print('final train error:', MEE(labels, train_pred))
     print('final val error:', MEE(val_labels, val_pred))
@@ -145,6 +162,7 @@ def output_correlations(model, data, labels, fit_func = None, func_args = None, 
     plt.colorbar()
     plt.legend()
     plt.show()
+
 
     if plot_arrow_worse != None:
         plt.figure(figsize=(14,6))
