@@ -355,11 +355,15 @@ class MLP:
             Labels of the input_data.
         """
         num_data=labels.shape[0]
+        #Loop backward over the layers
         for reverse_layer_number,layer in enumerate(self.network[::-1]):
             if self.nesterov:
+                #shift the point with momentum before the gradient evaluation if we are performing Nesterov
                 layer.dw_nest=self.alpha*layer.dW_1
             else:
                 layer.dw_nest=0
+
+            #Compute the delta
             if reverse_layer_number==0:
                 delta=((labels-layer.out)*layer.der_func(layer.net_nest))/num_data
             else:
@@ -372,8 +376,10 @@ class MLP:
 #xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 
 #%%%%%%%%%%% Decomment here for 5x speed up %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+            #Compute the gradient
             grad_W, grad_b = self._jit_update_weight(delta, layer.input)
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+            #update the weights and the biases
             if self.RMSProp:
                 dW,db=layer.RMSProp(grad_W,grad_b,self.eta,self.beta)
                 dW-=self.lamb * (np.abs(layer.weight)**(self.norm_L-1))*np.sign(layer.weight)
