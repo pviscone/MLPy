@@ -1,6 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 from .losses import MEE
+from matplotlib.colors import LogNorm
 import matplotlib as mpl
 
 def plot_results(network, input_data, val_data, 
@@ -135,7 +136,8 @@ def plot_results(network, input_data, val_data,
     print('final val error:', MEE(val_labels, val_pred))
 
 
-def output_correlations(model, data, labels, fit_func = None, func_args = None, mean_fit = True, plot_arrow_worse = None):
+def output_correlations(model, data, labels, fit_func = None, func_args = None, 
+                        mean_fit = True, plot_arrow_worse = None, savefig = False, filename = None):
     pred=model.predict(data)
     x = pred[:,1]
     y = pred[:,0]
@@ -152,15 +154,21 @@ def output_correlations(model, data, labels, fit_func = None, func_args = None, 
     plt.title('original vs predicted')
     plt.scatter(lab_x, lab_y, s = 4, label = 'original')
     plt.scatter(x, y, s = 4, label = 'predicted')
+    plt.xlabel('Output 1')
+    plt.ylabel('Output 0')
+    plt.grid(alpha = 0.3)
     plt.legend()
     
     plt.subplot(122)
     plt.title('Heatmap based on MEE error')
     c = np.sqrt(np.sum((labels - pred)**2, axis = 1))
-    plt.scatter(lab_x, lab_y, s = 4, alpha = 0.3, label = 'original')
-    plt.scatter(x, y, s = 4, cmap = 'Reds', c = c)
-    plt.colorbar()
+    plt.scatter(lab_x, lab_y, s = 4, alpha = 0.3, label = 'original', c='k')
+    plt.scatter(x, y, s = 15, cmap = 'jet', c = c, norm= LogNorm(vmin = 1e-2, vmax = np.max(c)))
+    plt.colorbar(label='MEE')
     plt.legend()
+    plt.xlabel('Output 1')
+    plt.ylabel('Output 0')
+    plt.grid(alpha = 0.3)
     plt.show()
 
 
@@ -181,3 +189,8 @@ def output_correlations(model, data, labels, fit_func = None, func_args = None, 
         plt.scatter(x, y, s = 1, alpha = 0.1, c = 'orange')
         plt.show()
         return worse
+    if savefig:
+        if filename == None:
+            raise Exception('Please give a name to the figure!')
+        plt.savefig(filename, dpi = 200)
+
