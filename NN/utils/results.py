@@ -1,11 +1,13 @@
 import numpy as np
 import matplotlib.pyplot as plt
 from .losses import MEE
+from matplotlib.colors import LogNorm
+import matplotlib as mpl
 
 def plot_results(network, input_data, val_data, 
                  labels, val_labels, norm = None, func = None, func_args = None, 
                  fit_idx = 0, new_out = False, mean_fit = False, 
-                 sortidx = None):
+                 sortidx = None, filename=None, savefig = False):
     """
     Function to show the results of a regressor (network).
 
@@ -61,6 +63,7 @@ def plot_results(network, input_data, val_data,
         train_pred = norm(train_pred)
         val_pred = norm(val_pred)
 
+    '''
     if sortidx != None:
         sorted_index = np.argsort(train_pred[:, sortidx])
         train_pred = train_pred[sorted_index, :]
@@ -68,39 +71,73 @@ def plot_results(network, input_data, val_data,
 
         sorted_index = np.argsort(val_pred[:, sortidx])
         val_pred = val_pred[sorted_index, :]
-        val_labels = val_labels[sorted_index,:]
+        val_labels = val_labels[sorted_index,:]'''
+
+    if sortidx != None:
+        val_labels_x = np.sort(val_labels[:,1])
+        argsort=np.argsort(val_labels[:,1])
+        val_labels_y = val_labels[argsort,0]
+        val_pred_x=val_pred[argsort,1]
+        val_pred_y=val_pred[argsort,0]
+        val_res_x=val_pred_x-val_labels_x
+        val_res_y=val_pred_y-val_labels_y
+
+        train_labels_x = np.sort(labels[:,1])
+        argsort=np.argsort(labels[:,1])
+        train_labels_y = labels[argsort,0]
+        train_pred_x=train_pred[argsort,1]
+        train_pred_y=train_pred[argsort,0]
+        train_res_x=train_pred_x-train_labels_x
+        train_res_y=train_pred_y-train_labels_y
 
     x = np.arange(len(network.train_MEE))
+    
+    font = {'size': 13}
 
+    mpl.rc('font', **font)
     fig = plt.figure(figsize=(13,4))
 
     fig.add_subplot(131)
-    plt.plot(x,network.train_MEE)
-    plt.plot(x,network.val_MEE,label="test")
+    plt.plot(x,network.train_MEE,label="training")
+    plt.plot(x,network.val_MEE,label="validation")
     plt.title("Learning curve")
     plt.xlabel("Epochs")
-    plt.ylabel("Squared error")
+    plt.ylabel("MEE")
     plt.yscale("log")
     plt.legend()
+    plt.grid(which='minor',alpha = 0.5)
+    plt.grid(which='major',alpha = 0.5)
 
     fig.add_subplot(132)
     plt.title('Residual for training data')
-    for i in range(labels.shape[1]):
-        plt.plot(np.arange(len(labels)),labels[:,i]-train_pred[:,i],".",label=f"residual{i}")
-    plt.legend()
+    plt.plot(train_labels_x, train_res_x, ".",label="output 1")
+    plt.plot(train_labels_x, train_res_y, ".",label="output 0")
+    plt.legend(fontsize = 10)
+    plt.xlabel('Label output 1')
+    plt.ylabel('Residual')
+    plt.grid(alpha = 0.5)
 
     fig.add_subplot(133)
     plt.title('Residual for validation data')
-    for i in range(val_labels.shape[1]):
-        plt.plot(np.arange(len(val_labels)),val_labels[:,i]-val_pred[:,i],".",label=f"residual{i}")
-    plt.legend()
+    plt.plot(val_labels_x, val_res_x, ".",label="output 1")
+    plt.plot(val_labels_x, val_res_y, ".",label="output 0")
+    plt.grid(alpha = 0.5)
+    plt.legend(fontsize = 10)
+    plt.xlabel('Label output 1')
+    plt.ylabel('Residual')
+
     plt.tight_layout()
+    if savefig:
+        if filename == None:
+            raise Exception('Please give a name to the figure!')
+        plt.savefig(filename, dpi = 200)
     plt.show()
     print('final train error:', MEE(labels, train_pred))
     print('final val error:', MEE(val_labels, val_pred))
 
 
-def output_correlations(model, data, labels, fit_func = None, func_args = None, mean_fit = True, plot_arrow_worse = None):
+def output_correlations(model, data, labels, fit_func = None, func_args = None, 
+                        mean_fit = True, plot_arrow_worse = None, savefig = False, filename = None):
     pred=model.predict(data)
     x = pred[:,1]
     y = pred[:,0]
@@ -117,16 +154,23 @@ def output_correlations(model, data, labels, fit_func = None, func_args = None, 
     plt.title('original vs predicted')
     plt.scatter(lab_x, lab_y, s = 4, label = 'original')
     plt.scatter(x, y, s = 4, label = 'predicted')
+    plt.xlabel('Output 1')
+    plt.ylabel('Output 0')
+    plt.grid(alpha = 0.3)
     plt.legend()
     
     plt.subplot(122)
     plt.title('Heatmap based on MEE error')
     c = np.sqrt(np.sum((labels - pred)**2, axis = 1))
-    plt.scatter(lab_x, lab_y, s = 4, alpha = 0.3, label = 'original')
-    plt.scatter(x, y, s = 4, cmap = 'Reds', c = c)
-    plt.colorbar()
+    plt.scatter(lab_x, lab_y, s = 4, alpha = 0.3, label = 'original', c='k')
+    plt.scatter(x, y, s = 15, cmap = 'jet', c = c, norm= LogNorm(vmin = 1e-2, vmax = np.max(c)))
+    plt.colorbar(label='MEE')
     plt.legend()
+    plt.xlabel('Output 1')
+    plt.ylabel('Output 0')
+    plt.grid(alpha = 0.3)
     plt.show()
+
 
     if plot_arrow_worse != None:
         plt.figure(figsize=(14,6))
@@ -144,3 +188,9 @@ def output_correlations(model, data, labels, fit_func = None, func_args = None, 
         plt.scatter(x[worse], y[worse], s = 10, alpha = 1, c = 'orange')
         plt.scatter(x, y, s = 1, alpha = 0.1, c = 'orange')
         plt.show()
+        return worse
+    if savefig:
+        if filename == None:
+            raise Exception('Please give a name to the figure!')
+        plt.savefig(filename, dpi = 200)
+

@@ -72,6 +72,7 @@ def k_fold(input_matrix, labels, k=4):
     Returns:
         [numpy array], [numpy array], [numpy array], [numpy array]: [training set, validation set, train_labels, validation_labels]
     """
+    if k < 2: raise Exception("Fold number must be greater than 2")
     idx_partition=int(len(input_matrix)/k)
     k_partition=k_fold.counter%k
     if k_partition<(k-1):
@@ -92,15 +93,49 @@ def k_fold(input_matrix, labels, k=4):
     return training_set, validation_set, train_labels, val_labels
 
 
+def k_fold_gen(input_matrix, labels, k=4):
+    """[Create a partition of the dataset in k-fold cross validation set and return the training set and the validation set for each fold recursively]
 
+    Args:
+        input_matrix ([type]): [description]
+        k (int, optional): [description]. Defaults to 4.
+
+    Returns:
+        [numpy array], [numpy array], [numpy array], [numpy array]: [training set, validation set, train_labels, validation_labels]
+    """
+    idx = int(len(input_matrix)/k)
+    if k < 2: raise Exception("Fold number must be greater than 2")
+    for i in range(k):
+        if i <(k-1):
+            end = (i+1)*idx
+        elif i ==(k-1):
+            end = len(input_matrix)
+        else: end = -1
+        # Data
+        training_set=np.delete(input_matrix, slice(i*idx,end), axis=0)
+        validation_set=input_matrix[i*idx:end,:]
+        # Labels
+        train_labels=np.delete(labels, slice(i*idx,end), axis=0)
+        val_labels=labels[i*idx:end,:]
+    
+        yield training_set, validation_set, train_labels, val_labels
 
 class StandardScaler:
     """
     Class for the normalization with respect to mean and std.
     """
+    def __init__(self, kind = 'single'):
+        """
+        single
+        vector
+        """
+        self.kind = kind
+
     def fit(self, data):
         self.mean = np.mean(data,axis=0)
-        self.std=np.std(data,axis=0)
+        self.std = np.std(data,axis=0)
+        if self.kind == 'vector':
+            self.std = np.max(self.std)
 
     def fit_transform(self, data):
         self.fit(data)

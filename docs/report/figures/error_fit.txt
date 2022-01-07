@@ -1,0 +1,10 @@
+without fit
+
+train 1.016
+val 1.105
+
+
+with fit
+
+train 1.006
+val 1.095

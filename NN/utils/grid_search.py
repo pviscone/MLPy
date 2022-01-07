@@ -3,9 +3,11 @@ import os
 import itertools # Include in standard python library
 import time 
 from . preprocessing import split
+from joblib import Parallel, delayed
 
 
-def grid_search(model, dict_models, dict_params, input_data, labels, error, verbose = True, **kwargs):
+def grid_search(model, dict_models, dict_params, input_data, labels, error, 
+                verbose = True, n_jobs = 1, **kwargs):
     """
     Function that implement a grid search algorithm for the model selection.
 
@@ -50,6 +52,43 @@ def grid_search(model, dict_models, dict_params, input_data, labels, error, verb
         - 'model': the parameters of the model.
         - 'model_name': the name of the model given in dict_models.
     """
+    def train_one_combination(k, params):
+        ######## Create the dictionary with parameters of candidate #######
+        dict_candidate = {} # Fill with the info for each candidate model
+        # Fill the train parameters (like {'p1':p1_val, 'p2':p2_val, ...} )
+        dict_candidate['train'] = {k:p for k, p in zip(dict_params.keys(), params)}
+
+        if dict_candidate['train']['batch_size'] == -1:
+            dict_candidate['train']['eta'] *= 5
+
+        dict_candidate['model'] = mod_params # set the model parameters
+        dict_candidate['model_name'] = mod_name # and the model name 
+        # APPEND
+        
+        ###### Create and train the candidate #############################
+        sum_err = 0
+        if kwargs['kind'] == 'hold_out': k = 1
+        elif kwargs['kind'] == 'k_fold': k = kwargs['k']
+        else: raise Exception('Invalid split method')
+        for _ in range(k):
+            data_k, val_k, labels_k, val_labels_k = split(input_data, labels, **kwargs)
+            candidate = model(**dict_candidate['model'])
+
+            # Train the candidate with the parameters in dict_params['train']
+            candidate.train(data_k, labels_k, val_k, val_labels_k, 
+                    **dict_candidate['train'])
+            # predict on validation data
+            pred_val = candidate.predict(val_k)
+
+            err_k =  error(val_labels_k, pred_val)
+            sum_err += err_k
+        # add the error to the list of error to position i
+        # ATTENTION!!
+#        print(f'in position {i} I put {sum_err/k}')
+        return sum_err/k, dict_candidate
+    if n_jobs == -1:
+        n_jobs = os.cpu_count()
+
     # Extract the values of the dictionary
     list_params_values = list(dict_params.values())
     # Create a list with all the permutations of the values
@@ -58,48 +97,36 @@ def grid_search(model, dict_models, dict_params, input_data, labels, error, verb
     list_results = [] # List for final sorting of candidates based on error
     i = 0 # incremental variable for double loop
     n_candidates = len(list_permutation)*len(dict_models) # num candidates
-    err_val_array = np.empty(n_candidates) # Empty array for the errors
+    err_val_array = []# np.empty(n_candidates) # Empty array for the errors
+    n_models = len(dict_models)
+    j = 0
     start = time.time() # Time counter
+    tot_time = 0
+    print(f'start training {n_candidates} possible combinations')
     for mod_name, mod_params in dict_models.items(): # Apply the combination to
         #                                            # each model
-        for params in list_permutation: # For each combination of parameter
+        inner_time = time.time()
+        out = Parallel(n_jobs=n_jobs)(delayed(train_one_combination)(k, params) 
+                                      for k, params in enumerate(list_permutation))
+#        print(out)
+        inner_list_E = [xx[0] for xx in out] # save the parallel error in a list
+        inner_list_cand = [xx[1] for xx in out] # save the parallel candidate in a list
+        # append the candidate to the final list
+        [list_candidates.append(c) for c in inner_list_cand] # Add to list of candidates
 
-            ######## Create the dictionary with parameters of candidate #######
+        for e in inner_list_E: # Empty array for the errors
+            err_val_array.append(e)
 
-            dict_candidate = {} # Fill with the info for each candidate model
-            # Fill the train parameters (like {'p1':p1_val, 'p2':p2_val, ...} )
-            dict_candidate['train'] = {k:p for k, p in zip(dict_params.keys(), params)}
-            dict_candidate['model'] = mod_params # set the model parameters
-            dict_candidate['model_name'] = mod_name # and the model name 
-            list_candidates.append(dict_candidate) # Add to list of candidates
-            
-            if verbose: # Print only if verbose
-                str_param = f"Train parameters: {dict_candidate['train']}"
-                print(f"{i} on {n_candidates}: Model {mod_name} --> " + str_param)
-                
-            ###### Create and train the candidate #############################
-            sum_err = 0
-            if kwargs['kind'] == 'hold_out': k = 1
-            elif kwargs['kind'] == 'k_fold': k = kwargs['k']
-            else: raise Exception('Invalid split method')
-            for _ in range(k):
-                data_k, val_k, labels_k, val_labels_k = split(input_data, labels, **kwargs)
-                candidate = model(**dict_candidate['model'])
+        elapsed_inner = time.time()-inner_time # time for single loop
+        tot_time += elapsed_inner # total time up to j
+        mean_tot_time = tot_time/(j+1)
+        n_remaining = n_models - (j + 1)
+        if verbose:
+            print(f'[trained={(j+1) * len(list_permutation)}] [elaps t={tot_time:.1f} s] [remain t ={n_remaining * mean_tot_time:.1f} s]', end = '\r')
+        j += 1
 
-                # Train the candidate with the parameters in dict_params['train']
-                candidate.train(data_k, labels_k, val_k, val_labels_k, 
-                        **dict_candidate['train'])
-                # predict on validation data
-                pred_val = candidate.predict(val_k)
-
-                err_k =  error(val_labels_k, pred_val)
-                sum_err += err_k
-            # add the error to the list of error to position i
-            err_val_array[i] = sum_err/k
-            print('\n')
-            i += 1
-
-    if verbose: print(f'Time for the grid search: {time.time()-start} s')
+    err_val_array = np.array(err_val_array) # for np.sort...
+    if verbose: print(f'\nTime for the grid search: {time.time()-start} s')
 
     # Sort the errors and return the index of the sorting 
     idx_sorted_val = np.argsort(err_val_array)
