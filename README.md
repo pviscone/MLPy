@@ -1,5 +1,2 @@
 # Machine_learning_project
-
-In NN you can find all the code that run our models. 
-
-In docs/notebook you can find the notebooks that we used to do our analyzes over the data
+A Multi Layer Perceptron library and other tools like some preprocessing tools and a non linear least square regressor (Levenberg-Marquardt algorithm)
